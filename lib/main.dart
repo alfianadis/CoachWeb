@@ -1,9 +1,7 @@
-import 'package:coach_web/feature/cobalogin.dart';
-import 'package:coach_web/feature/cobaregis.dart';
-import 'package:coach_web/feature/login_screen.dart';
 import 'package:coach_web/feature/main_screen.dart';
 import 'package:coach_web/utils/constant.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 void main() {
   runApp(const MyApp());
@@ -21,6 +19,14 @@ class MyApp extends StatelessWidget {
         scaffoldBackgroundColor: backgroundColor,
         brightness: Brightness.dark,
       ),
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('id'), // Bahasa Indonesia
+      ],
       home: MainScreen(),
       // routes: {
       //   '/login': (context) => LoginScreen(),

@@ -27,17 +27,29 @@ class _PemainScreenState extends State<PemainScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            ElevatedButton.icon(
-              style: TextButton.styleFrom(
-                padding: EdgeInsets.symmetric(
-                  horizontal: defaultPadding * 1.5,
-                  vertical:
-                      defaultPadding / (Responsive.isMobile(context) ? 2 : 1),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'List Pemain',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-              ),
-              onPressed: () {},
-              icon: const Icon(Icons.add),
-              label: const Text("Tambah Pemain"),
+                ElevatedButton.icon(
+                  style: TextButton.styleFrom(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: defaultPadding * 1.5,
+                      vertical: defaultPadding /
+                          (Responsive.isMobile(context) ? 2 : 1),
+                    ),
+                  ),
+                  onPressed: () {},
+                  icon: const Icon(Icons.add),
+                  label: const Text("Tambah Pemain"),
+                ),
+              ],
             ),
             const SizedBox(height: 20),
             FutureBuilder<List<PlayerModel>>(
@@ -120,7 +132,7 @@ class _PemainScreenState extends State<PemainScreen> {
                   color: cardForegroundColor,
                 ),
                 child: const Padding(
-                  padding: EdgeInsets.only(right: 20, left: 80),
+                  padding: EdgeInsets.only(right: 20, left: 20),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -157,10 +169,10 @@ class _PemainScreenState extends State<PemainScreen> {
                           padding: EdgeInsets.symmetric(
                               horizontal: 16.0, vertical: 8),
                           child: ListTile(
-                            leading: CircleAvatar(
-                              backgroundImage: NetworkImage(player.imgUrl),
-                              radius: 30,
-                            ),
+                            // leading: CircleAvatar(
+                            //   backgroundImage: NetworkImage(player.imgUrl),
+                            //   radius: 30,
+                            // ),
                             title: Text(
                               player.name,
                               style: TextStyle(

@@ -131,7 +131,6 @@ class _LineupScreenState extends State<LineupScreen> {
 
   @override
   Widget build(BuildContext context) {
-    Size size = MediaQuery.of(context).size;
     return SafeArea(
       child: SingleChildScrollView(
         primary: false,

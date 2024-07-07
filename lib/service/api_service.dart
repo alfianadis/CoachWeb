@@ -12,7 +12,7 @@ import 'package:coach_web/model/statistik_model.dart';
 import 'package:http/http.dart' as http;
 
 class ApiService {
-  final String baseUrl = "https://beige-ideas-dig.loca.lt/";
+  final String baseUrl = "https://slimy-jars-give.loca.lt/";
 
 //auth
 
@@ -54,27 +54,27 @@ class ApiService {
   //schedule
 
   Future<List<ScheduleModel>> fetchSchedules() async {
-    final response = await http.get(Uri.parse(baseUrl));
+    final response = await http.get(Uri.parse('$baseUrl/schedule'));
 
     if (response.statusCode == 200) {
       List<dynamic> data = json.decode(response.body);
-      return data.map((json) => ScheduleModel.fromJson(json)).toList();
+      return data.map((item) => ScheduleModel.fromJson(item)).toList();
     } else {
       throw Exception('Failed to load schedules');
     }
   }
 
-  Future<void> addSchedule(ScheduleModel schedule) async {
+  Future<ScheduleModel?> addSchedule(ScheduleModel schedule) async {
     final response = await http.post(
-      Uri.parse(baseUrl),
-      headers: {
-        'Content-Type': 'application/json; charset=UTF-8',
-      },
+      Uri.parse('$baseUrl/schedule'),
+      headers: {"Content-Type": "application/json"},
       body: jsonEncode(schedule.toJson()),
     );
 
-    if (response.statusCode != 201) {
-      throw Exception('Failed to add schedule');
+    if (response.statusCode == 201) {
+      return ScheduleModel.fromJson(jsonDecode(response.body));
+    } else {
+      return null;
     }
   }
 

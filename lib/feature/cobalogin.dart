@@ -16,6 +16,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _login() async {
     try {
+      // ignore: unused_local_variable
       AuthResponse response = await apiService.login(
         _usernameController.text,
         _passwordController.text,

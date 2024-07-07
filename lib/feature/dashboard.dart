@@ -1,9 +1,12 @@
+import 'package:coach_web/components/header.dart';
+import 'package:coach_web/feature/add_schedule.dart';
 import 'package:coach_web/model/schedule_model.dart';
 import 'package:coach_web/service/api_service.dart';
 import 'package:flutter/material.dart';
 import 'package:coach_web/config/responsive.dart';
 import 'package:coach_web/utils/colors.dart';
 import 'package:coach_web/utils/constant.dart';
+import 'package:intl/intl.dart';
 
 class DashboardScreen extends StatefulWidget {
   @override
@@ -13,6 +16,7 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   List<ScheduleModel> schedules = [];
   final ApiService apiService = ApiService();
+  bool isLoading = true;
 
   @override
   void initState() {
@@ -21,71 +25,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Future<void> fetchSchedules() async {
-    final fetchedSchedules = await apiService.fetchSchedules();
-    setState(() {
-      schedules = fetchedSchedules;
-    });
+    try {
+      final fetchedSchedules = await apiService.fetchSchedules();
+      setState(() {
+        schedules = fetchedSchedules;
+        isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        isLoading = false;
+      });
+    }
   }
 
-  Future<void> addSchedule(ScheduleModel schedule) async {
-    await apiService.addSchedule(schedule);
-    fetchSchedules();
-  }
-
-  void showAddScheduleDialog() {
-    final _formKey = GlobalKey<FormState>();
-    String activityName = '';
-    DateTime activityTime = DateTime.now();
-    String activityLocation = '';
-
+  void _showAddScheduleDialog() {
     showDialog(
       context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text("Tambah Jadwal"),
-          content: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextFormField(
-                  decoration: InputDecoration(labelText: "Nama Aktivitas"),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Nama aktivitas tidak boleh kosong';
-                    }
-                    activityName = value;
-                    return null;
-                  },
-                ),
-                TextFormField(
-                  decoration: InputDecoration(labelText: "Lokasi Aktivitas"),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Lokasi aktivitas tidak boleh kosong';
-                    }
-                    activityLocation = value;
-                    return null;
-                  },
-                ),
-                ElevatedButton(
-                  onPressed: () async {
-                    if (_formKey.currentState!.validate()) {
-                      ScheduleModel newSchedule = ScheduleModel(
-                        id: '',
-                        activityName: activityName,
-                        activityTime: activityTime,
-                        activityLocation: activityLocation,
-                      );
-                      await addSchedule(newSchedule);
-                      Navigator.of(context).pop();
-                    }
-                  },
-                  child: Text("Tambah"),
-                ),
-              ],
-            ),
-          ),
+      builder: (context) {
+        return AddScheduleDialog(
+          onScheduleAdded: (newSchedule) {
+            setState(() {
+              schedules.add(newSchedule);
+            });
+          },
         );
       },
     );
@@ -99,6 +61,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       child: SingleChildScrollView(
         child: Column(
           children: [
+            Header(),
             const SizedBox(height: 20),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -139,30 +102,50 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               (Responsive.isMobile(context) ? 2 : 1),
                         ),
                       ),
-                      onPressed: showAddScheduleDialog,
+                      onPressed: _showAddScheduleDialog,
                       icon: const Icon(Icons.add),
                       label: const Text("Tambah Jadwal"),
                     ),
                   ],
                 ),
                 const SizedBox(height: 10),
-                schedules.isEmpty
+                isLoading
                     ? const Center(child: CircularProgressIndicator())
-                    : GridView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: Responsive.isMobile(context) ? 1 : 4,
-                          childAspectRatio: 3 / 2,
-                          crossAxisSpacing: 20,
-                          mainAxisSpacing: 20,
-                        ),
-                        itemCount: schedules.length,
-                        itemBuilder: (context, index) {
-                          final schedule = schedules[index];
-                          return ScheduleCard(schedule: schedule, size: size);
-                        },
-                      ),
+                    : schedules.isEmpty
+                        ? Container(
+                            padding: const EdgeInsets.all(20),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(8.0),
+                              color: cardBackgroundColor,
+                            ),
+                            child: const Center(
+                              child: Text(
+                                "Tidak ada jadwal",
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          )
+                        : GridView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            gridDelegate:
+                                SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount:
+                                  Responsive.isMobile(context) ? 1 : 4,
+                              childAspectRatio: 3 / 2,
+                              crossAxisSpacing: 20,
+                              mainAxisSpacing: 20,
+                            ),
+                            itemCount: schedules.length,
+                            itemBuilder: (context, index) {
+                              final schedule = schedules[index];
+                              return ScheduleCard(
+                                  schedule: schedule, size: size);
+                            },
+                          ),
                 const SizedBox(height: 20),
               ],
             ),
@@ -178,6 +161,12 @@ class ScheduleCard extends StatelessWidget {
   final Size size;
 
   const ScheduleCard({required this.schedule, required this.size});
+
+  String formatDateTime(DateTime dateTime) {
+    final DateFormat dayFormat = DateFormat('EEEE, dd MMMM yyyy', 'id_ID');
+    final DateFormat timeFormat = DateFormat('HH:mm');
+    return '${dayFormat.format(dateTime)}, ${timeFormat.format(dateTime)}';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -215,15 +204,7 @@ class ScheduleCard extends StatelessWidget {
                 ),
                 const SizedBox(width: 10),
                 Text(
-                  '${schedule.activityTime.toLocal()}'.split(' ')[0],
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w200,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Text(
-                  '${schedule.activityTime.toLocal()}'.split(' ')[1],
+                  formatDateTime(schedule.activityTime),
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w200,

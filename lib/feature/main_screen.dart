@@ -4,7 +4,6 @@ import 'package:coach_web/feature/dashboard.dart';
 import 'package:coach_web/feature/lineup_screen.dart';
 import 'package:coach_web/feature/pemain_screen.dart';
 import 'package:coach_web/feature/result_assessment_screen.dart';
-import 'package:coach_web/feature/schedule_screen.dart';
 import 'package:flutter/material.dart';
 
 class MainScreen extends StatefulWidget {
@@ -54,10 +53,11 @@ class _MainScreenState extends State<MainScreen> {
               child: IndexedStack(
                 index: currentIndex,
                 children: [
-                  DashboardScreen(),
-                  ScheduleScreen(),
-                  PemainScreen(),
                   LineupScreen(),
+
+                  DashboardScreen(),
+                  // ScheduleScreen(),
+                  PemainScreen(),
                   HasilPenilaianScreen(),
                   // SignOutPage(),
                 ],
