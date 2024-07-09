@@ -1,9 +1,12 @@
 import 'package:coach_web/components/side_menu_widget.dart';
 import 'package:coach_web/config/responsive.dart';
+import 'package:coach_web/feature/aspek_screen.dart';
 import 'package:coach_web/feature/dashboard.dart';
+import 'package:coach_web/feature/kriteria_screen.dart';
 import 'package:coach_web/feature/lineup_screen.dart';
 import 'package:coach_web/feature/pemain_screen.dart';
 import 'package:coach_web/feature/result_assessment_screen.dart';
+import 'package:coach_web/feature/statistik_screen.dart';
 import 'package:flutter/material.dart';
 
 class MainScreen extends StatefulWidget {
@@ -53,11 +56,12 @@ class _MainScreenState extends State<MainScreen> {
               child: IndexedStack(
                 index: currentIndex,
                 children: [
-                  LineupScreen(),
-
                   DashboardScreen(),
-                  // ScheduleScreen(),
                   PemainScreen(),
+                  AspekScreen(),
+                  KriteriaScreen(),
+                  StatistikScreen(),
+                  LineupScreen(),
                   HasilPenilaianScreen(),
                   // SignOutPage(),
                 ],

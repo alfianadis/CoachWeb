@@ -12,7 +12,7 @@ import 'package:coach_web/model/statistik_model.dart';
 import 'package:http/http.dart' as http;
 
 class ApiService {
-  final String baseUrl = "https://slimy-jars-give.loca.lt/";
+  final String baseUrl = "https://hungry-lights-arrive.loca.lt/";
 
 //auth
 
