@@ -1,4 +1,6 @@
 import 'package:coach_web/config/responsive.dart';
+import 'package:coach_web/feature/add_kriteria.dart';
+import 'package:coach_web/feature/edit_kriteria.dart';
 import 'package:coach_web/model/kriteria_model.dart';
 import 'package:coach_web/service/api_service.dart';
 import 'package:coach_web/utils/colors.dart';
@@ -55,6 +57,16 @@ class _KriteriaScreenState extends State<KriteriaScreen> {
     });
   }
 
+  Future<void> _showAddKriteriaDialog() async {
+    await showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return const AddKriteriaDialog();
+      },
+    );
+    _fetchCriteria(); // Refresh the criteria list after adding a new one
+  }
+
   @override
   Widget build(BuildContext context) {
     Size size = MediaQuery.of(context).size;
@@ -85,7 +97,7 @@ class _KriteriaScreenState extends State<KriteriaScreen> {
                             (Responsive.isMobile(context) ? 2 : 1),
                       ),
                     ),
-                    onPressed: () {},
+                    onPressed: _showAddKriteriaDialog,
                     icon: const Icon(Icons.add),
                     label: const Text("Tambah Kriteria"),
                   ),
@@ -128,9 +140,102 @@ class _KriteriaScreenState extends State<KriteriaScreen> {
                       spacing: 20,
                       runSpacing: 20,
                       children: filteredCriteria
-                          .map((aspek) => KriteriaCard(kriteria: aspek))
+                          .map((aspek) => KriteriaCard(
+                                kriteria: aspek,
+                                onDelete: () {
+                                  _fetchCriteria(); // Refresh list after deleting
+                                },
+                              ))
                           .toList(),
                     ),
+              const SizedBox(height: 30),
+              Center(
+                child: Container(
+                  height: size.height * 0.35,
+                  width: size.width * 0.2,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(8.0),
+                    color: cardBackgroundColor,
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 20, right: 20),
+                    child: Column(
+                      children: [
+                        const SizedBox(height: 20),
+                        const Text(
+                          'Penjelasan Nilai Target',
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 20),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Nilai',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              Text(
+                                'Deskripsi',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Divider(thickness: 1),
+                        Column(
+                          children: List.generate(
+                            4,
+                            (index) {
+                              final nilai = index + 1;
+                              final deskripsi = [
+                                'Kurang',
+                                'Cukup',
+                                'Baik',
+                                'Sangat Baik'
+                              ][index];
+                              return Padding(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 20, vertical: 8),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      nilai.toString(),
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                    Text(
+                                      deskripsi,
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
             ],
           ),
         ),
@@ -141,8 +246,10 @@ class _KriteriaScreenState extends State<KriteriaScreen> {
 
 class KriteriaCard extends StatelessWidget {
   final KriteriaModel kriteria;
+  final VoidCallback onDelete;
 
-  const KriteriaCard({Key? key, required this.kriteria}) : super(key: key);
+  const KriteriaCard({Key? key, required this.kriteria, required this.onDelete})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -243,12 +350,14 @@ class KriteriaCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 InkWell(
-                  onTap: () {},
+                  onTap: () {
+                    _showEditKriteriaDialog(context, kriteria);
+                  },
                   child: Container(
                     height: size.height * 0.04,
                     width: size.height * 0.11,
                     decoration: BoxDecoration(
-                        color: AppColors.chart01,
+                        color: AppColors.greenColor,
                         borderRadius: BorderRadius.circular(16)),
                     child: const Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -270,7 +379,9 @@ class KriteriaCard extends StatelessWidget {
                   ),
                 ),
                 InkWell(
-                  onTap: () {},
+                  onTap: () {
+                    _showDeleteConfirmationDialog(context, kriteria.id);
+                  },
                   child: const Text(
                     'Delete',
                     style: TextStyle(
@@ -284,6 +395,103 @@ class KriteriaCard extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+
+  Future<void> _showEditKriteriaDialog(
+      BuildContext context, KriteriaModel kriteria) async {
+    await showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return EditKriteriaDialog(kriteria: kriteria);
+      },
+    );
+    onDelete(); // Refresh list after editing
+  }
+
+  void _deleteAspek(BuildContext context, String id) async {
+    ApiService apiService = ApiService();
+    try {
+      bool success = await apiService.deleteKriteria(id);
+      if (success) {
+        print('Kriteria deleted successfully');
+        onDelete(); // Refresh list after deleting
+      } else {
+        print('Failed to delete kriteria');
+      }
+    } catch (e) {
+      print('Error: $e');
+      // Handle error, show snackbar, etc.
+    }
+  }
+
+  Future<void> _showDeleteConfirmationDialog(
+      BuildContext context, String id) async {
+    return showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14.0),
+          ),
+          title: const Text(
+            'Apakah Anda Yakin Untuk Menghapus Kriteria Ini ?',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+          ),
+          content: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              InkWell(
+                highlightColor: Colors.transparent,
+                splashColor: Colors.transparent,
+                onTap: () {
+                  Navigator.pop(context);
+                },
+                child: Container(
+                  width: MediaQuery.of(context).size.width * 0.08,
+                  height: 56,
+                  decoration: BoxDecoration(
+                      color: cardForegroundColor,
+                      borderRadius: BorderRadius.circular(8)),
+                  child: const Center(
+                    child: Text(
+                      'Batal',
+                      style:
+                          TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              InkWell(
+                highlightColor: Colors.transparent,
+                splashColor: Colors.transparent,
+                onTap: () {
+                  Navigator.of(context).pop();
+                  _deleteAspek(context, id);
+                },
+                child: Container(
+                  width: MediaQuery.of(context).size.width * 0.08,
+                  height: 56,
+                  decoration: BoxDecoration(
+                      color: AppColors.primaryColor,
+                      borderRadius: BorderRadius.circular(8)),
+                  child: const Center(
+                    child: Text(
+                      'Hapus',
+                      style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

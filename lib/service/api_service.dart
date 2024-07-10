@@ -1,22 +1,26 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'package:coach_web/config/user_provider.dart';
 import 'package:coach_web/model/aspek_model.dart';
 import 'package:coach_web/model/assessment_model.dart';
-import 'package:coach_web/model/auth_model.dart';
 import 'package:coach_web/model/auth_response.dart';
 import 'package:coach_web/model/kriteria_model.dart';
 import 'package:coach_web/model/player_model.dart';
 import 'package:coach_web/model/schedule_model.dart';
 import 'package:coach_web/model/statistik_model.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 class ApiService {
-  final String baseUrl = "https://hungry-lights-arrive.loca.lt/";
+  final String baseUrl = "https://slimy-wombats-stop.loca.lt/";
 
 //auth
 
-  Future<AuthResponse> login(String username, String password) async {
+  Future<AuthResponse> login(
+      BuildContext context, String username, String password) async {
     final response = await http.post(
       Uri.parse('$baseUrl/auth/login'),
       headers: <String, String>{
@@ -28,26 +32,55 @@ class ApiService {
       }),
     );
 
-    if (response.statusCode == 200) {
-      return AuthResponse.fromJson(jsonDecode(response.body));
+    print('Response status: ${response.statusCode}');
+    print('Response body: ${response.body}');
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      final authResponse = jsonDecode(response.body);
+      final accessToken = authResponse['access_token'];
+      final userJson = authResponse['user'];
+
+      // Membuat objek User dari JSON
+      final user = User.fromJson(userJson);
+
+      // Simpan user di SharedPreferences untuk menjaga state
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('access_token', accessToken);
+      await prefs.setString('user', jsonEncode(user.toJson()));
+
+      // Update UserProvider
+      Provider.of<UserProvider>(context, listen: false).setUser(user);
+
+      return AuthResponse(
+        accessToken: accessToken,
+        user: user,
+      );
+    } else if (response.statusCode == 401) {
+      final errorResponse = jsonDecode(response.body);
+      throw Exception('Failed to login: ${errorResponse['message']}');
     } else {
-      throw Exception('Failed to login: ${response.body}');
+      throw Exception('Failed to login: ${response.reasonPhrase}');
     }
   }
 
-  Future<AuthResponse> register(User user) async {
+  Future<void> register(
+      String username, String password, String fullName, String role) async {
     final response = await http.post(
       Uri.parse('$baseUrl/auth/register'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
-      body: jsonEncode(user.toJson()),
+      body: jsonEncode(<String, String>{
+        'username': username,
+        'password': password,
+        'fullName': fullName,
+        'role': role,
+      }),
     );
 
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      return AuthResponse.fromJson(jsonDecode(response.body));
-    } else {
-      throw Exception('Failed to register: ${response.body}');
+    if (response.statusCode != 201) {
+      final errorResponse = jsonDecode(response.body);
+      throw Exception('Failed to register: ${errorResponse['message']}');
     }
   }
 

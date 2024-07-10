@@ -1,4 +1,3 @@
-import 'package:coach_web/model/auth_model.dart';
 import 'package:coach_web/service/api_service.dart';
 import 'package:flutter/material.dart';
 
@@ -15,38 +14,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final ApiService apiService = ApiService();
 
   Future<void> _register() async {
-    if (_usernameController.text.isEmpty ||
-        _passwordController.text.isEmpty ||
-        _fullNameController.text.isEmpty ||
-        _roleController.text.isEmpty) {
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: Text('Registration Failed'),
-            content: Text('All fields are required'),
-            actions: [
-              TextButton(
-                child: Text('OK'),
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-              ),
-            ],
-          );
-        },
-      );
-      return;
-    }
-
     try {
-      User user = User(
-        username: _usernameController.text,
-        password: _passwordController.text,
-        fullName: _fullNameController.text,
-        role: _roleController.text,
+      await apiService.register(
+        _usernameController.text,
+        _passwordController.text,
+        _fullNameController.text,
+        _roleController.text,
       );
-      await apiService.register(user);
 
       // Menampilkan dialog sukses dan navigasi ke halaman login
       showDialog(
@@ -60,7 +34,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 child: Text('OK'),
                 onPressed: () {
                   Navigator.pop(context);
-                  Navigator.pushReplacementNamed(context, '/login');
+                  Navigator.pop(context); // Kembali ke halaman login
                 },
               ),
             ],
@@ -74,7 +48,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         builder: (BuildContext context) {
           return AlertDialog(
             title: Text('Registration Failed'),
-            content: Text('Failed to register: $e'),
+            content: Text(e.toString()),
             actions: [
               TextButton(
                 child: Text('OK'),

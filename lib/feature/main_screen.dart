@@ -63,7 +63,6 @@ class _MainScreenState extends State<MainScreen> {
                   StatistikScreen(),
                   LineupScreen(),
                   HasilPenilaianScreen(),
-                  // SignOutPage(),
                 ],
               ),
             ),
