@@ -1,10 +1,10 @@
 import 'package:coach_web/config/user_provider.dart';
+import 'package:coach_web/feature/login_screen.dart';
 import 'package:coach_web/utils/constant.dart';
 import 'package:coach_web/utils/side_menu_data.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:coach_web/feature/cobalogin.dart';
 
 class SideMenuWidget extends StatefulWidget {
   final Function(int) onMenuItemClicked;

@@ -3,13 +3,13 @@ import 'package:flutter/material.dart';
 
 class SideMenuData {
   final menu = const <MenuModel>[
-    MenuModel(icon: Icons.home, title: 'Dashboard'),
+    MenuModel(icon: Icons.dashboard, title: 'Dashboard'),
     MenuModel(icon: Icons.run_circle, title: 'Pemain'),
-    MenuModel(icon: Icons.person, title: 'Aspek'),
-    MenuModel(icon: Icons.person, title: 'Kriteria'),
-    MenuModel(icon: Icons.person, title: 'Statistik'),
-    MenuModel(icon: Icons.settings, title: 'Line Up'),
-    MenuModel(icon: Icons.history, title: 'Hasil Penilaian'),
+    MenuModel(icon: Icons.category, title: 'Aspek'),
+    MenuModel(icon: Icons.assignment, title: 'Kriteria'),
+    MenuModel(icon: Icons.bar_chart, title: 'Statistik'),
+    MenuModel(icon: Icons.people, title: 'Line Up'),
+    MenuModel(icon: Icons.score, title: 'Hasil Penilaian'),
     MenuModel(icon: Icons.logout, title: 'SignOut'),
   ];
 }

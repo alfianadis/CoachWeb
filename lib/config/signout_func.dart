@@ -1,8 +1,8 @@
 import 'package:coach_web/config/user_provider.dart';
+import 'package:coach_web/feature/login_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:provider/provider.dart';
-import 'package:coach_web/feature/cobalogin.dart';
 
 Future<void> signOut(BuildContext context) async {
   bool confirm = await showDialog(

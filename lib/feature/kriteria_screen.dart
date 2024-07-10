@@ -289,11 +289,10 @@ class KriteriaCard extends StatelessWidget {
                     ),
                   ],
                 ),
-                Image.asset(
-                  'assets/icons/player.png',
-                  width: 30,
-                  height: 30,
-                ),
+                const Icon(
+                  Icons.run_circle,
+                  size: 30,
+                )
               ],
             ),
             SizedBox(

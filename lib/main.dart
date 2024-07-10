@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:coach_web/config/user_provider.dart';
-import 'package:coach_web/feature/cobalogin.dart';
+import 'package:coach_web/feature/login_screen.dart';
 import 'package:coach_web/feature/main_screen.dart';
 import 'package:coach_web/model/auth_response.dart';
 import 'package:coach_web/utils/constant.dart';

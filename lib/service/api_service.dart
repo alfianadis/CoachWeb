@@ -15,7 +15,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 class ApiService {
-  final String baseUrl = "https://slimy-wombats-stop.loca.lt/";
+  final String baseUrl = "https://nasty-tigers-stop.loca.lt/";
 
 //auth
 
