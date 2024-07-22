@@ -1,3 +1,4 @@
+import 'package:coach_web/components/header.dart';
 import 'package:coach_web/model/assessment_model.dart';
 import 'package:coach_web/service/api_service.dart';
 import 'package:coach_web/utils/constant.dart';
@@ -71,6 +72,8 @@ class _HasilPenilaianScreenState extends State<HasilPenilaianScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
+          Header(),
+          const SizedBox(height: 20),
           Text(
             'Hasil Penilaian Pemain',
             style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
