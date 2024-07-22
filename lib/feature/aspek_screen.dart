@@ -1,3 +1,4 @@
+import 'package:coach_web/components/header.dart';
 import 'package:coach_web/config/responsive.dart';
 import 'package:coach_web/feature/add_aspek.dart';
 import 'package:coach_web/feature/edit_aspek.dart';
@@ -25,7 +26,6 @@ class _AspekScreenState extends State<AspekScreen> {
     _fetchAspeks();
   }
 
-  // Fungsi untuk mengambil data aspeks dari API
   void _fetchAspeks() async {
     try {
       List<AspekModel> fetchedAspeks = await apiService.getAspeks();
@@ -38,7 +38,6 @@ class _AspekScreenState extends State<AspekScreen> {
       setState(() {
         isLoading = false;
       });
-      // Handle error, show snackbar, etc.
     }
   }
 
@@ -55,6 +54,7 @@ class _AspekScreenState extends State<AspekScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Size size = MediaQuery.of(context).size;
     return Scaffold(
       body: Padding(
         padding:
@@ -62,6 +62,8 @@ class _AspekScreenState extends State<AspekScreen> {
         child: SingleChildScrollView(
           child: Column(
             children: [
+              Header(),
+              const SizedBox(height: 20),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -81,16 +83,7 @@ class _AspekScreenState extends State<AspekScreen> {
                             (Responsive.isMobile(context) ? 2 : 1),
                       ),
                     ),
-                    onPressed: () async {
-                      final result = await showDialog(
-                        context: context,
-                        builder: (context) => AddAspekDialog(),
-                      );
-
-                      if (result == 'success') {
-                        _fetchAspeks();
-                      }
-                    },
+                    onPressed: _showAddAspekDialog,
                     icon: const Icon(Icons.add),
                     label: const Text("Tambah Aspek"),
                   ),
@@ -99,17 +92,36 @@ class _AspekScreenState extends State<AspekScreen> {
               const SizedBox(height: 30),
               isLoading
                   ? const CircularProgressIndicator()
-                  : Wrap(
-                      spacing: 20,
-                      runSpacing: 20,
-                      children: aspeks
-                          .map((aspek) => AspekCard(
-                                aspek: aspek,
-                                onDelete: () {
-                                  _fetchAspeks();
-                                },
-                              ))
-                          .toList(),
+                  : LayoutBuilder(
+                      builder: (context, constraints) {
+                        int crossAxisCount = 1;
+                        if (constraints.maxWidth > 1200) {
+                          crossAxisCount = 4;
+                        } else if (constraints.maxWidth > 800) {
+                          crossAxisCount = 3;
+                        } else if (constraints.maxWidth > 600) {
+                          crossAxisCount = 2;
+                        }
+                        return GridView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          gridDelegate:
+                              SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: crossAxisCount,
+                            childAspectRatio: 2 / 1.3,
+                            crossAxisSpacing: 20,
+                            mainAxisSpacing: 20,
+                          ),
+                          itemCount: aspeks.length,
+                          itemBuilder: (context, index) {
+                            final aspek = aspeks[index];
+                            return AspekCard(
+                              aspek: aspek,
+                              onDelete: _fetchAspeks,
+                            );
+                          },
+                        );
+                      },
                     ),
             ],
           ),
@@ -130,32 +142,29 @@ class AspekCard extends StatelessWidget {
   Widget build(BuildContext context) {
     Size size = MediaQuery.of(context).size;
     return Container(
-      height: size.height * 0.25,
-      width: size.width * 0.18,
       decoration: const BoxDecoration(
-        borderRadius: BorderRadius.all(
-          Radius.circular(8.0),
-        ),
+        borderRadius: BorderRadius.all(Radius.circular(8.0)),
         color: cardBackgroundColor,
       ),
       child: Padding(
-        padding: const EdgeInsets.only(left: 20, right: 20, top: 20),
+        padding: const EdgeInsets.all(16.0), // Sesuaikan padding
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  aspek.assessmentAspect,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
+                Flexible(
+                  child: Text(
+                    aspek.assessmentAspect,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                const Icon(
-                  Icons.run_circle,
-                  size: 30,
-                )
+                const Icon(Icons.run_circle, size: 30),
               ],
             ),
             const Divider(thickness: 1),
@@ -230,7 +239,7 @@ class AspekCard extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(
-                          Icons.edit_square,
+                          Icons.edit,
                           color: AppColors.white,
                         ),
                         SizedBox(width: 5),
@@ -272,14 +281,13 @@ class AspekCard extends StatelessWidget {
     try {
       bool success = await apiService.deleteAspek(id);
       if (success) {
-        print('Kriteria deleted successfully');
-        onDelete(); // Refresh list after deleting
+        print('Aspek deleted successfully');
+        onDelete();
       } else {
-        print('Failed to delete kriteria');
+        print('Failed to delete aspek');
       }
     } catch (e) {
       print('Error: $e');
-      // Handle error, show snackbar, etc.
     }
   }
 
@@ -293,7 +301,7 @@ class AspekCard extends StatelessWidget {
             borderRadius: BorderRadius.circular(14.0),
           ),
           title: const Text(
-            'Apakah Anda Yakin Untuk Menghapus Aspek Ini ?',
+            'Apakah Anda Yakin Untuk Menghapus Aspek Ini?',
             textAlign: TextAlign.center,
             style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
           ),
@@ -310,8 +318,9 @@ class AspekCard extends StatelessWidget {
                   width: MediaQuery.of(context).size.width * 0.08,
                   height: 56,
                   decoration: BoxDecoration(
-                      color: cardForegroundColor,
-                      borderRadius: BorderRadius.circular(8)),
+                    color: cardForegroundColor,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                   child: const Center(
                     child: Text(
                       'Batal',
@@ -333,15 +342,17 @@ class AspekCard extends StatelessWidget {
                   width: MediaQuery.of(context).size.width * 0.08,
                   height: 56,
                   decoration: BoxDecoration(
-                      color: AppColors.primaryColor,
-                      borderRadius: BorderRadius.circular(8)),
+                    color: AppColors.primaryColor,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                   child: const Center(
                     child: Text(
                       'Hapus',
                       style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                 ),

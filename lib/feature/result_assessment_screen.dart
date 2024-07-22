@@ -14,9 +14,6 @@ class _HasilPenilaianScreenState extends State<HasilPenilaianScreen> {
   List<AssessmentModel> _assessments = [];
   final ApiService apiService = ApiService();
 
-  // List<RecentFile> demoRecentFiles = [];
-  // List<RecentFile> cadanganFiles = [];
-
   @override
   void initState() {
     super.initState();
@@ -28,7 +25,6 @@ class _HasilPenilaianScreenState extends State<HasilPenilaianScreen> {
       List<AssessmentModel> data = await apiService.fetchPlayerData();
       setState(() {
         _assessments = data;
-        // _setBestPlayers();
       });
     } catch (e) {
       print('Failed to load data: $e');
@@ -116,62 +112,18 @@ class _HasilPenilaianScreenState extends State<HasilPenilaianScreen> {
           SizedBox(height: 20),
           _buildDynamicContainer(size, 'Aspek $_selectedPosition'),
           SizedBox(height: 10),
-          Container(
-            height: size.height * 0.05,
-            width: size.width * 0.45,
-            decoration: const BoxDecoration(
-              borderRadius: BorderRadius.all(
-                Radius.circular(8.0),
-              ),
-              color: cardBackgroundColor,
-            ),
-            padding: EdgeInsets.only(left: 15, top: 10),
-            child: _buildDataTargetTable(),
-          ),
+          _buildResponsiveContainer(_buildDataTargetTable(), size),
           SizedBox(height: 20),
-          Container(
-            height: size.height * 0.4,
-            width: size.width * 0.45,
-            decoration: const BoxDecoration(
-              borderRadius: BorderRadius.all(
-                Radius.circular(8.0),
-              ),
-              color: cardBackgroundColor,
-            ),
-            padding: EdgeInsets.only(left: 15, top: 10),
-            child: _buildDataGapTable(),
-          ),
+          _buildResponsiveContainer(_buildDataGapTable(), size),
           SizedBox(height: 20),
-          Container(
-            height: size.height * 0.4,
-            width: size.width * 0.45,
-            decoration: const BoxDecoration(
-              borderRadius: BorderRadius.all(
-                Radius.circular(8.0),
-              ),
-              color: cardBackgroundColor,
-            ),
-            padding: EdgeInsets.only(left: 15, top: 10),
-            child: _buildDataBobotTable(),
-          ),
+          _buildResponsiveContainer(_buildDataBobotTable(), size),
           SizedBox(height: 20),
           ElevatedButton(
             onPressed: _sortPlayersByTotalScore,
             child: Text('Urutkan Berdasarkan Nilai Tertinggi'),
           ),
           SizedBox(height: 20),
-          Container(
-            height: size.height * 0.4,
-            width: size.width * 0.6,
-            decoration: const BoxDecoration(
-              borderRadius: BorderRadius.all(
-                Radius.circular(8.0),
-              ),
-              color: cardBackgroundColor,
-            ),
-            padding: EdgeInsets.only(left: 15, top: 10),
-            child: _buildDataAkhirTable(),
-          ),
+          _buildResponsiveContainer(_buildDataAkhirTable(), size),
           SizedBox(height: 50),
         ],
       ),
@@ -180,17 +132,37 @@ class _HasilPenilaianScreenState extends State<HasilPenilaianScreen> {
 
   Widget _buildDynamicContainer(Size size, String title) {
     return Container(
-      height: size.height * 0.4,
-      width: size.width * 0.45,
       decoration: const BoxDecoration(
         borderRadius: BorderRadius.all(
           Radius.circular(8.0),
         ),
         color: cardBackgroundColor,
       ),
-      padding: EdgeInsets.only(left: 15, top: 10),
+      padding: EdgeInsets.all(15),
       child: SingleChildScrollView(
-          scrollDirection: Axis.horizontal, child: _buildDataTable(title)),
+        scrollDirection: Axis.horizontal,
+        child: IntrinsicWidth(
+          child: _buildDataTable(title),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildResponsiveContainer(Widget child, Size size) {
+    return Container(
+      decoration: const BoxDecoration(
+        borderRadius: BorderRadius.all(
+          Radius.circular(8.0),
+        ),
+        color: cardBackgroundColor,
+      ),
+      padding: EdgeInsets.all(15),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: IntrinsicWidth(
+          child: child,
+        ),
+      ),
     );
   }
 
@@ -324,40 +296,46 @@ class _HasilPenilaianScreenState extends State<HasilPenilaianScreen> {
         SizedBox(height: 10),
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
-          child: DataTable(
-            columns: [
-              DataColumn(label: Text('Nama Pemain')),
-              DataColumn(label: Text(coreFactors[0])),
-              DataColumn(label: Text(coreFactors[1])),
-              DataColumn(label: Text(secondaryFactors[0])),
-              DataColumn(label: Text(secondaryFactors[1])),
-            ],
-            rows: filteredAssessments.map((assessment) {
-              var aspect = assessment.aspect.first;
-              return DataRow(cells: [
-                DataCell(Text(assessment.playerName)),
-                DataCell(Text((int.parse(aspect.target[coreFactors[0]] ?? '0') -
-                        int.parse(
-                            aspect.criteria.coreFactor[coreFactors[0]] ?? '0'))
-                    .toString())),
-                DataCell(Text((int.parse(aspect.target[coreFactors[1]] ?? '0') -
-                        int.parse(
-                            aspect.criteria.coreFactor[coreFactors[1]] ?? '0'))
-                    .toString())),
-                DataCell(Text(
-                    (int.parse(aspect.target[secondaryFactors[0]] ?? '0') -
-                            int.parse(aspect.criteria
-                                    .secondaryFactor[secondaryFactors[0]] ??
-                                '0'))
-                        .toString())),
-                DataCell(Text(
-                    (int.parse(aspect.target[secondaryFactors[1]] ?? '0') -
-                            int.parse(aspect.criteria
-                                    .secondaryFactor[secondaryFactors[1]] ??
-                                '0'))
-                        .toString())),
-              ]);
-            }).toList(),
+          child: IntrinsicWidth(
+            child: DataTable(
+              columns: [
+                DataColumn(label: Text('Nama Pemain')),
+                DataColumn(label: Text(coreFactors[0])),
+                DataColumn(label: Text(coreFactors[1])),
+                DataColumn(label: Text(secondaryFactors[0])),
+                DataColumn(label: Text(secondaryFactors[1])),
+              ],
+              rows: filteredAssessments.map((assessment) {
+                var aspect = assessment.aspect.first;
+                return DataRow(cells: [
+                  DataCell(Text(assessment.playerName)),
+                  DataCell(Text(
+                      (int.parse(aspect.target[coreFactors[0]] ?? '0') -
+                              int.parse(
+                                  aspect.criteria.coreFactor[coreFactors[0]] ??
+                                      '0'))
+                          .toString())),
+                  DataCell(Text(
+                      (int.parse(aspect.target[coreFactors[1]] ?? '0') -
+                              int.parse(
+                                  aspect.criteria.coreFactor[coreFactors[1]] ??
+                                      '0'))
+                          .toString())),
+                  DataCell(Text(
+                      (int.parse(aspect.target[secondaryFactors[0]] ?? '0') -
+                              int.parse(aspect.criteria
+                                      .secondaryFactor[secondaryFactors[0]] ??
+                                  '0'))
+                          .toString())),
+                  DataCell(Text(
+                      (int.parse(aspect.target[secondaryFactors[1]] ?? '0') -
+                              int.parse(aspect.criteria
+                                      .secondaryFactor[secondaryFactors[1]] ??
+                                  '0'))
+                          .toString())),
+                ]);
+              }).toList(),
+            ),
           ),
         ),
       ],
@@ -388,52 +366,54 @@ class _HasilPenilaianScreenState extends State<HasilPenilaianScreen> {
         SizedBox(height: 10),
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
-          child: DataTable(
-            columns: [
-              DataColumn(label: Text('Nama Pemain')),
-              DataColumn(label: Text(coreFactors[0])),
-              DataColumn(label: Text(coreFactors[1])),
-              DataColumn(label: Text(secondaryFactors[0])),
-              DataColumn(label: Text(secondaryFactors[1])),
-            ],
-            rows: filteredAssessments.map((assessment) {
-              var aspect = assessment.aspect.first;
-              return DataRow(cells: [
-                DataCell(Text(assessment.playerName)),
-                DataCell(Text(aspect
-                    .getBobotNilai(
-                        (int.parse(aspect.target[coreFactors[0]] ?? '0') -
-                                int.parse(aspect
-                                        .criteria.coreFactor[coreFactors[0]] ??
-                                    '0'))
-                            .toDouble())
-                    .toString())),
-                DataCell(Text(aspect
-                    .getBobotNilai(
-                        (int.parse(aspect.target[coreFactors[1]] ?? '0') -
-                                int.parse(aspect
-                                        .criteria.coreFactor[coreFactors[1]] ??
-                                    '0'))
-                            .toDouble())
-                    .toString())),
-                DataCell(Text(aspect
-                    .getBobotNilai(
-                        (int.parse(aspect.target[secondaryFactors[0]] ?? '0') -
-                                int.parse(aspect.criteria
-                                        .secondaryFactor[secondaryFactors[0]] ??
-                                    '0'))
-                            .toDouble())
-                    .toString())),
-                DataCell(Text(aspect
-                    .getBobotNilai(
-                        (int.parse(aspect.target[secondaryFactors[1]] ?? '0') -
-                                int.parse(aspect.criteria
-                                        .secondaryFactor[secondaryFactors[1]] ??
-                                    '0'))
-                            .toDouble())
-                    .toString())),
-              ]);
-            }).toList(),
+          child: IntrinsicWidth(
+            child: DataTable(
+              columns: [
+                DataColumn(label: Text('Nama Pemain')),
+                DataColumn(label: Text(coreFactors[0])),
+                DataColumn(label: Text(coreFactors[1])),
+                DataColumn(label: Text(secondaryFactors[0])),
+                DataColumn(label: Text(secondaryFactors[1])),
+              ],
+              rows: filteredAssessments.map((assessment) {
+                var aspect = assessment.aspect.first;
+                return DataRow(cells: [
+                  DataCell(Text(assessment.playerName)),
+                  DataCell(Text(aspect
+                      .getBobotNilai(
+                          (int.parse(aspect.target[coreFactors[0]] ?? '0') -
+                                  int.parse(aspect.criteria
+                                          .coreFactor[coreFactors[0]] ??
+                                      '0'))
+                              .toDouble())
+                      .toString())),
+                  DataCell(Text(aspect
+                      .getBobotNilai(
+                          (int.parse(aspect.target[coreFactors[1]] ?? '0') -
+                                  int.parse(aspect.criteria
+                                          .coreFactor[coreFactors[1]] ??
+                                      '0'))
+                              .toDouble())
+                      .toString())),
+                  DataCell(Text(aspect
+                      .getBobotNilai((int.parse(
+                                  aspect.target[secondaryFactors[0]] ?? '0') -
+                              int.parse(aspect.criteria
+                                      .secondaryFactor[secondaryFactors[0]] ??
+                                  '0'))
+                          .toDouble())
+                      .toString())),
+                  DataCell(Text(aspect
+                      .getBobotNilai((int.parse(
+                                  aspect.target[secondaryFactors[1]] ?? '0') -
+                              int.parse(aspect.criteria
+                                      .secondaryFactor[secondaryFactors[1]] ??
+                                  '0'))
+                          .toDouble())
+                      .toString())),
+                ]);
+              }).toList(),
+            ),
           ),
         ),
       ],
@@ -464,75 +444,77 @@ class _HasilPenilaianScreenState extends State<HasilPenilaianScreen> {
         SizedBox(height: 10),
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
-          child: DataTable(
-            columns: [
-              DataColumn(label: Text('Nama Pemain')),
-              DataColumn(label: Text(coreFactors[0])),
-              DataColumn(label: Text(coreFactors[1])),
-              DataColumn(label: Text(secondaryFactors[0])),
-              DataColumn(label: Text(secondaryFactors[1])),
-              DataColumn(label: Text('NCF')),
-              DataColumn(label: Text('NSF')),
-              DataColumn(label: Text('Total')),
-            ],
-            rows: filteredAssessments.map((assessment) {
-              var aspect = assessment.aspect.first;
-              double coreScore = 0;
-              double secondaryScore = 0;
+          child: IntrinsicWidth(
+            child: DataTable(
+              columns: [
+                DataColumn(label: Text('Nama Pemain')),
+                DataColumn(label: Text(coreFactors[0])),
+                DataColumn(label: Text(coreFactors[1])),
+                DataColumn(label: Text(secondaryFactors[0])),
+                DataColumn(label: Text(secondaryFactors[1])),
+                DataColumn(label: Text('NCF')),
+                DataColumn(label: Text('NSF')),
+                DataColumn(label: Text('Total')),
+              ],
+              rows: filteredAssessments.map((assessment) {
+                var aspect = assessment.aspect.first;
+                double coreScore = 0;
+                double secondaryScore = 0;
 
-              for (var factor in coreFactors) {
-                double selisih = aspect.calculateSelisih(factor);
-                coreScore += aspect.getBobotNilai(selisih);
-              }
-              double ncf = coreScore / coreFactors.length;
+                for (var factor in coreFactors) {
+                  double selisih = aspect.calculateSelisih(factor);
+                  coreScore += aspect.getBobotNilai(selisih);
+                }
+                double ncf = coreScore / coreFactors.length;
 
-              for (var factor in secondaryFactors) {
-                double selisih = aspect.calculateSelisih(factor);
-                secondaryScore += aspect.getBobotNilai(selisih);
-              }
-              double nsf = secondaryScore / secondaryFactors.length;
+                for (var factor in secondaryFactors) {
+                  double selisih = aspect.calculateSelisih(factor);
+                  secondaryScore += aspect.getBobotNilai(selisih);
+                }
+                double nsf = secondaryScore / secondaryFactors.length;
 
-              double totalScore = (ncf * 0.6) + (nsf * 0.4);
+                double totalScore = (ncf * 0.6) + (nsf * 0.4);
 
-              return DataRow(cells: [
-                DataCell(Text(assessment.playerName)),
-                DataCell(Text(aspect
-                    .getBobotNilai(
-                        (int.parse(aspect.target[coreFactors[0]] ?? '0') -
-                                int.parse(aspect
-                                        .criteria.coreFactor[coreFactors[0]] ??
-                                    '0'))
-                            .toDouble())
-                    .toString())),
-                DataCell(Text(aspect
-                    .getBobotNilai(
-                        (int.parse(aspect.target[coreFactors[1]] ?? '0') -
-                                int.parse(aspect
-                                        .criteria.coreFactor[coreFactors[1]] ??
-                                    '0'))
-                            .toDouble())
-                    .toString())),
-                DataCell(Text(aspect
-                    .getBobotNilai(
-                        (int.parse(aspect.target[secondaryFactors[0]] ?? '0') -
-                                int.parse(aspect.criteria
-                                        .secondaryFactor[secondaryFactors[0]] ??
-                                    '0'))
-                            .toDouble())
-                    .toString())),
-                DataCell(Text(aspect
-                    .getBobotNilai(
-                        (int.parse(aspect.target[secondaryFactors[1]] ?? '0') -
-                                int.parse(aspect.criteria
-                                        .secondaryFactor[secondaryFactors[1]] ??
-                                    '0'))
-                            .toDouble())
-                    .toString())),
-                DataCell(Text(ncf.toStringAsFixed(2))),
-                DataCell(Text(nsf.toStringAsFixed(2))),
-                DataCell(Text(totalScore.toStringAsFixed(2))),
-              ]);
-            }).toList(),
+                return DataRow(cells: [
+                  DataCell(Text(assessment.playerName)),
+                  DataCell(Text(aspect
+                      .getBobotNilai(
+                          (int.parse(aspect.target[coreFactors[0]] ?? '0') -
+                                  int.parse(aspect.criteria
+                                          .coreFactor[coreFactors[0]] ??
+                                      '0'))
+                              .toDouble())
+                      .toString())),
+                  DataCell(Text(aspect
+                      .getBobotNilai(
+                          (int.parse(aspect.target[coreFactors[1]] ?? '0') -
+                                  int.parse(aspect.criteria
+                                          .coreFactor[coreFactors[1]] ??
+                                      '0'))
+                              .toDouble())
+                      .toString())),
+                  DataCell(Text(aspect
+                      .getBobotNilai((int.parse(
+                                  aspect.target[secondaryFactors[0]] ?? '0') -
+                              int.parse(aspect.criteria
+                                      .secondaryFactor[secondaryFactors[0]] ??
+                                  '0'))
+                          .toDouble())
+                      .toString())),
+                  DataCell(Text(aspect
+                      .getBobotNilai((int.parse(
+                                  aspect.target[secondaryFactors[1]] ?? '0') -
+                              int.parse(aspect.criteria
+                                      .secondaryFactor[secondaryFactors[1]] ??
+                                  '0'))
+                          .toDouble())
+                      .toString())),
+                  DataCell(Text(ncf.toStringAsFixed(2))),
+                  DataCell(Text(nsf.toStringAsFixed(2))),
+                  DataCell(Text(totalScore.toStringAsFixed(2))),
+                ]);
+              }).toList(),
+            ),
           ),
         ),
       ],

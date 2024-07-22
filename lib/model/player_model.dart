@@ -15,7 +15,6 @@ class PlayerModel {
   String name;
   String position;
   int jerseyNumber;
-  String imgUrl;
   DateTime createdAt;
   DateTime updatedAt;
   int v;
@@ -25,7 +24,6 @@ class PlayerModel {
     required this.name,
     required this.position,
     required this.jerseyNumber,
-    required this.imgUrl,
     required this.createdAt,
     required this.updatedAt,
     required this.v,
@@ -36,7 +34,6 @@ class PlayerModel {
         name: json["name"],
         position: json["position"],
         jerseyNumber: json["jersey_number"],
-        imgUrl: json["img_url"],
         createdAt: DateTime.parse(json["created_at"]),
         updatedAt: DateTime.parse(json["updated_at"]),
         v: json["__v"],
@@ -47,7 +44,6 @@ class PlayerModel {
         "name": name,
         "position": position,
         "jersey_number": jerseyNumber,
-        "img_url": imgUrl,
         "created_at": createdAt.toIso8601String(),
         "updated_at": updatedAt.toIso8601String(),
         "__v": v,

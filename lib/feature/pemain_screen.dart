@@ -1,8 +1,10 @@
+import 'package:coach_web/components/header.dart';
 import 'package:coach_web/config/responsive.dart';
+import 'package:coach_web/feature/add_player.dart';
+import 'package:flutter/material.dart';
 import 'package:coach_web/model/player_model.dart';
 import 'package:coach_web/service/api_service.dart';
 import 'package:coach_web/utils/constant.dart';
-import 'package:flutter/material.dart';
 
 class PemainScreen extends StatefulWidget {
   @override
@@ -21,74 +23,100 @@ class _PemainScreenState extends State<PemainScreen> {
   @override
   Widget build(BuildContext context) {
     Size size = MediaQuery.of(context).size;
-    return Padding(
-      padding: const EdgeInsets.only(top: 20, bottom: 55, left: 30, right: 30),
-      child: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'List Pemain',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                ElevatedButton.icon(
-                  style: TextButton.styleFrom(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: defaultPadding * 1.5,
-                      vertical: defaultPadding /
-                          (Responsive.isMobile(context) ? 2 : 1),
+    return SafeArea(
+      child: Padding(
+        padding:
+            const EdgeInsets.only(top: 20, bottom: 55, left: 30, right: 30),
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Header(),
+              const SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'List Pemain',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                  onPressed: () {},
-                  icon: const Icon(Icons.add),
-                  label: const Text("Tambah Pemain"),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            FutureBuilder<List<PlayerModel>>(
-              future: futurePlayers,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Center(child: CircularProgressIndicator());
-                } else if (snapshot.hasError) {
-                  return Center(child: Text('Error: ${snapshot.error}'));
-                } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return Center(child: Text('No players found'));
-                } else {
-                  return Column(
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          buildPositionSection(context, size, 'Posisi Anchor',
-                              snapshot.data!, 'Anchor'),
-                          buildPositionSection(context, size, 'Posisi Pivot',
-                              snapshot.data!, 'Pivot'),
-                        ],
+                  ElevatedButton.icon(
+                    style: TextButton.styleFrom(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: defaultPadding * 1.5,
+                        vertical: defaultPadding /
+                            (Responsive.isMobile(context) ? 2 : 1),
                       ),
-                      const SizedBox(height: 20),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          buildPositionSection(context, size, 'Posisi Flank',
-                              snapshot.data!, 'Flank'),
-                          buildPositionSection(context, size, 'Posisi Kiper',
-                              snapshot.data!, 'Kiper'),
-                        ],
-                      ),
-                    ],
-                  );
-                }
-              },
-            ),
-          ],
+                    ),
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) => AddPlayerDialog(),
+                      ).then((value) {
+                        if (value != null && value) {
+                          setState(() {
+                            futurePlayers = ApiService().getPlayers();
+                          });
+                        }
+                      });
+                    },
+                    icon: const Icon(Icons.add),
+                    label: const Text("Tambah Pemain"),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              FutureBuilder<List<PlayerModel>>(
+                future: futurePlayers,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return Center(child: CircularProgressIndicator());
+                  } else if (snapshot.hasError) {
+                    return Center(child: Text('Error: ${snapshot.error}'));
+                  } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                    return Center(child: Text('No players found'));
+                  } else {
+                    return Column(
+                      children: [
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: buildPositionSection(context, size,
+                                  'Posisi Anchor', snapshot.data!, 'Anchor'),
+                            ),
+                            const SizedBox(width: 20),
+                            Expanded(
+                              child: buildPositionSection(context, size,
+                                  'Posisi Pivot', snapshot.data!, 'Pivot'),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 20),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: buildPositionSection(context, size,
+                                  'Posisi Flank', snapshot.data!, 'Flank'),
+                            ),
+                            const SizedBox(width: 20),
+                            Expanded(
+                              child: buildPositionSection(context, size,
+                                  'Posisi Kiper', snapshot.data!, 'Kiper'),
+                            ),
+                          ],
+                        ),
+                      ],
+                    );
+                  }
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -98,6 +126,8 @@ class _PemainScreenState extends State<PemainScreen> {
       List<PlayerModel> players, String position) {
     List<PlayerModel> filteredPlayers =
         players.where((player) => player.position == position).toList();
+
+    double containerHeight = 60.0 + (filteredPlayers.length * 80.0);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -112,8 +142,7 @@ class _PemainScreenState extends State<PemainScreen> {
         ),
         const SizedBox(height: 15),
         Container(
-          height: size.height * 0.5,
-          width: size.width * 0.4,
+          height: containerHeight,
           decoration: const BoxDecoration(
             borderRadius: BorderRadius.all(
               Radius.circular(8.0),
@@ -124,7 +153,6 @@ class _PemainScreenState extends State<PemainScreen> {
             children: [
               Container(
                 height: 60,
-                width: size.width * 0.4,
                 decoration: const BoxDecoration(
                   borderRadius: BorderRadius.all(
                     Radius.circular(8.0),
@@ -169,10 +197,6 @@ class _PemainScreenState extends State<PemainScreen> {
                           padding: EdgeInsets.symmetric(
                               horizontal: 16.0, vertical: 8),
                           child: ListTile(
-                            // leading: CircleAvatar(
-                            //   backgroundImage: NetworkImage(player.imgUrl),
-                            //   radius: 30,
-                            // ),
                             title: Text(
                               player.name,
                               style: TextStyle(

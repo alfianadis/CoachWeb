@@ -1,3 +1,4 @@
+import 'package:coach_web/components/header.dart';
 import 'package:coach_web/model/statistik_model.dart';
 import 'package:coach_web/service/api_service.dart';
 import 'package:coach_web/utils/constant.dart';
@@ -56,6 +57,8 @@ class _StatistikScreenState extends State<StatistikScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Header(),
+          const SizedBox(height: 20),
           const Text(
             'Statistik Pemain',
             style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
@@ -137,68 +140,71 @@ class _StatistikScreenState extends State<StatistikScreen> {
           ),
           const SizedBox(height: 20),
           if (selectedPemainStatistik != null)
-            Container(
-              height: size.height * 0.85,
-              width: size.width * 0.4,
-              decoration: const BoxDecoration(
-                borderRadius: BorderRadius.all(
-                  Radius.circular(8.0),
-                ),
-                color: cardBackgroundColor,
-              ),
-              padding: const EdgeInsets.only(left: 20, right: 20, top: 20),
-              child: Column(
-                children: [
-                  const Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.start,
+            LayoutBuilder(
+              builder: (BuildContext context, BoxConstraints constraints) {
+                return Container(
+                  width: size.width * 0.4,
+                  decoration: const BoxDecoration(
+                    borderRadius: BorderRadius.all(
+                      Radius.circular(8.0),
+                    ),
+                    color: cardBackgroundColor,
+                  ),
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
                     children: [
-                      Text(
-                        'Statistik',
-                        style: TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.bold),
+                      const Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Statistik',
+                            style: TextStyle(
+                                fontSize: 16, fontWeight: FontWeight.bold),
+                          ),
+                          Text(
+                            'Nilai',
+                            style: TextStyle(
+                                fontSize: 16, fontWeight: FontWeight.bold),
+                          ),
+                        ],
                       ),
-                      Text(
-                        'Nilai',
-                        style: TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.bold),
-                      ),
+                      const Divider(thickness: 1),
+                      const SizedBox(height: 10),
+                      buildStatRow('Jumlah Gol',
+                          '${selectedPemainStatistik!.attack.gol}'),
+                      buildStatRow('Shooting',
+                          '${selectedPemainStatistik!.attack.shooting}'),
+                      buildStatRow('Acceleration',
+                          '${selectedPemainStatistik!.attack.acceleration}'),
+                      buildStatRow('Speed',
+                          '${selectedPemainStatistik!.attack.crossing}'),
+                      buildStatRow('Ball Control',
+                          '${selectedPemainStatistik!.defence.ballControl}'),
+                      buildStatRow('Body Balance',
+                          '${selectedPemainStatistik!.defence.bodyBalance}'),
+                      buildStatRow('Endurance',
+                          '${selectedPemainStatistik!.defence.endurance}'),
+                      buildStatRow('Intersep',
+                          '${selectedPemainStatistik!.defence.intersep}'),
+                      buildStatRow('Vision',
+                          '${selectedPemainStatistik!.taktikal.vision}'),
+                      buildStatRow('Passing',
+                          '${selectedPemainStatistik!.taktikal.passing}'),
+                      buildStatRow('Through Pass',
+                          '${selectedPemainStatistik!.taktikal.throughPass}'),
+                      buildStatRow(
+                          'Save', '${selectedPemainStatistik!.keeper.save}'),
+                      buildStatRow('Refleks',
+                          '${selectedPemainStatistik!.keeper.refleks}'),
+                      buildStatRow(
+                          'Jump', '${selectedPemainStatistik!.keeper.jump}'),
+                      buildStatRow('Throwing',
+                          '${selectedPemainStatistik!.keeper.throwing}'),
                     ],
                   ),
-                  const Divider(thickness: 1),
-                  const SizedBox(height: 10),
-                  buildStatRow(
-                      'Jumlah Gol', '${selectedPemainStatistik!.attack.gol}'),
-                  buildStatRow('Shooting',
-                      '${selectedPemainStatistik!.attack.shooting}'),
-                  buildStatRow('Acceleration',
-                      '${selectedPemainStatistik!.attack.acceleration}'),
-                  buildStatRow(
-                      'Speed', '${selectedPemainStatistik!.attack.crossing}'),
-                  buildStatRow('Ball Control',
-                      '${selectedPemainStatistik!.defence.ballControl}'),
-                  buildStatRow('Body Balance',
-                      '${selectedPemainStatistik!.defence.bodyBalance}'),
-                  buildStatRow('Endurance',
-                      '${selectedPemainStatistik!.defence.endurance}'),
-                  buildStatRow('Intersep',
-                      '${selectedPemainStatistik!.defence.intersep}'),
-                  buildStatRow(
-                      'Vision', '${selectedPemainStatistik!.taktikal.vision}'),
-                  buildStatRow('Passing',
-                      '${selectedPemainStatistik!.taktikal.passing}'),
-                  buildStatRow('Through Pass',
-                      '${selectedPemainStatistik!.taktikal.throughPass}'),
-                  buildStatRow(
-                      'Save', '${selectedPemainStatistik!.keeper.save}'),
-                  buildStatRow(
-                      'Refleks', '${selectedPemainStatistik!.keeper.refleks}'),
-                  buildStatRow(
-                      'Jump', '${selectedPemainStatistik!.keeper.jump}'),
-                  buildStatRow('Throwing',
-                      '${selectedPemainStatistik!.keeper.throwing}'),
-                ],
-              ),
+                );
+              },
             ),
           const SizedBox(height: 50),
         ],
@@ -216,9 +222,12 @@ class _StatistikScreenState extends State<StatistikScreen> {
             statName,
             style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
-          Text(
-            statValue,
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          Flexible(
+            child: Text(
+              statValue,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              textAlign: TextAlign.right,
+            ),
           ),
         ],
       ),

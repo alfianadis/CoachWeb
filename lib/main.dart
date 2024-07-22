@@ -1,6 +1,6 @@
 import 'dart:convert';
-
 import 'package:coach_web/config/user_provider.dart';
+import 'package:coach_web/controllers/menuAppController.dart';
 import 'package:coach_web/feature/login_screen.dart';
 import 'package:coach_web/feature/main_screen.dart';
 import 'package:coach_web/model/auth_response.dart';
@@ -26,6 +26,7 @@ void main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => UserProvider()),
+        ChangeNotifierProvider(create: (_) => MenuAppController()),
       ],
       child: MyApp(initialUser: user),
     ),
@@ -60,11 +61,6 @@ class MyApp extends StatelessWidget {
         Locale('id'), // Bahasa Indonesia
       ],
       home: initialUser == null ? LoginScreen() : MainScreen(),
-      // routes: {
-      //   '/login': (context) => LoginScreen(),
-      //   '/register': (context) => RegisterScreen(),
-      //   '/main': (context) => MainScreen(),
-      // },
     );
   }
 }

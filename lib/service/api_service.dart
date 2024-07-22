@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 import 'package:coach_web/config/user_provider.dart';
 import 'package:coach_web/model/aspek_model.dart';
 import 'package:coach_web/model/assessment_model.dart';
@@ -15,7 +14,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 class ApiService {
-  final String baseUrl = "https://nasty-tigers-stop.loca.lt/";
+  final String baseUrl = "https://cute-vans-tease.loca.lt/";
 
 //auth
 
@@ -131,37 +130,22 @@ class ApiService {
     }
   }
 
-  Future<bool> addPlayer(String name, String position, int jerseyNumber) async {
-    try {
-      var request = http.MultipartRequest('POST', Uri.parse(baseUrl));
-      request.fields['name'] = name;
-      request.fields['position'] = position;
-      request.fields['jersey_number'] = jerseyNumber.toString();
+  Future<bool> addPlayer(
+      String name, String position, String jerseyNumber) async {
+    final url = Uri.parse('$baseUrl/player');
 
-      var streamedResponse =
-          await request.send().timeout(const Duration(seconds: 10));
-      var response = await http.Response.fromStream(streamedResponse);
+    var request = http.MultipartRequest('POST', url)
+      ..fields['name'] = name
+      ..fields['position'] = position
+      ..fields['jersey_number'] = jerseyNumber;
 
-      if (response.statusCode == 201) {
-        return true;
-      } else {
-        print('Failed to add player: ${response.statusCode}');
-        return false;
-      }
-    } on SocketException {
-      print('No Internet connection');
-      return false;
-    } on HttpException {
-      print("Couldn't find the post");
-      return false;
-    } on FormatException {
-      print("Bad response format");
-      return false;
-    } on TimeoutException {
-      print("Request timed out");
-      return false;
-    } catch (e) {
-      print('Error adding player: $e');
+    var response = await request.send();
+    var responseBody = await response.stream.bytesToString();
+    if (response.statusCode == 201) {
+      return true;
+    } else {
+      print('Failed to add player: ${response.statusCode}');
+      print('Response body: $responseBody');
       return false;
     }
   }

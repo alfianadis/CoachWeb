@@ -1,3 +1,4 @@
+import 'package:coach_web/components/header.dart';
 import 'package:coach_web/model/assessment_model.dart';
 import 'package:coach_web/service/api_service.dart';
 import 'package:coach_web/utils/constant.dart';
@@ -44,15 +45,6 @@ class _LineupScreenState extends State<LineupScreen> {
     List<AssessmentModel> flankPlayers = _getBestPlayersByPosition('Flank', 2);
     List<AssessmentModel> kiperPlayers = _getBestPlayersByPosition('Kiper', 1);
 
-    List<AssessmentModel> anchorCadangan =
-        _getBestPlayersByPosition('Anchor', 2, 1);
-    List<AssessmentModel> pivotCadangan =
-        _getBestPlayersByPosition('Pivot', 2, 1);
-    List<AssessmentModel> flankCadangan =
-        _getBestPlayersByPosition('Flank', 4, 2);
-    List<AssessmentModel> kiperCadangan =
-        _getBestPlayersByPosition('Kiper', 2, 1);
-
     demoRecentFiles = [
       ...kiperPlayers.map((player) => RecentFile(
             name: player.playerName,
@@ -72,20 +64,21 @@ class _LineupScreenState extends State<LineupScreen> {
           )),
     ];
 
+    // Select 7 cadangan players with specific composition
     cadanganFiles = [
-      ...kiperCadangan.map((player) => RecentFile(
+      ..._getBestPlayersByPosition('Kiper', 1, 1).map((player) => RecentFile(
             name: player.playerName,
             posisi: player.posisi,
           )),
-      ...anchorCadangan.map((player) => RecentFile(
+      ..._getBestPlayersByPosition('Anchor', 2, 1).map((player) => RecentFile(
             name: player.playerName,
             posisi: player.posisi,
           )),
-      ...flankCadangan.map((player) => RecentFile(
+      ..._getBestPlayersByPosition('Flank', 2, 2).map((player) => RecentFile(
             name: player.playerName,
             posisi: player.posisi,
           )),
-      ...pivotCadangan.map((player) => RecentFile(
+      ..._getBestPlayersByPosition('Pivot', 2, 2).map((player) => RecentFile(
             name: player.playerName,
             posisi: player.posisi,
           )),
@@ -138,7 +131,8 @@ class _LineupScreenState extends State<LineupScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header(),
+            Header(),
+            const SizedBox(height: 20),
             const Text(
               'Rekomendasi Line Up Pemain',
               textAlign: TextAlign.center,
@@ -149,12 +143,26 @@ class _LineupScreenState extends State<LineupScreen> {
             ),
             const SizedBox(height: 20),
             Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                PlayerTable(
-                    title: "Pemain Inti", demoRecentFiles: demoRecentFiles),
+                Expanded(
+                  flex: 1,
+                  child: PlayerTable(
+                    title: "Pemain Inti",
+                    demoRecentFiles: demoRecentFiles,
+                    maxHeight: MediaQuery.of(context).size.height * 0.75,
+                  ),
+                ),
                 SizedBox(width: 20),
-                PlayerTable(
-                    title: "Pemain Cadangan", demoRecentFiles: cadanganFiles),
+                Expanded(
+                  flex: 1,
+                  child: PlayerTable(
+                    title: "Pemain Cadangan",
+                    demoRecentFiles: cadanganFiles,
+                    maxHeight: MediaQuery.of(context).size.height * 0.9,
+                    isScrollable: false,
+                  ),
+                ),
               ],
             ),
           ],
@@ -167,16 +175,20 @@ class _LineupScreenState extends State<LineupScreen> {
 class PlayerTable extends StatelessWidget {
   final String title;
   final List<RecentFile> demoRecentFiles;
+  final double maxHeight;
+  final bool isScrollable;
 
-  const PlayerTable(
-      {super.key, required this.title, required this.demoRecentFiles});
+  const PlayerTable({
+    super.key,
+    required this.title,
+    required this.demoRecentFiles,
+    required this.maxHeight,
+    this.isScrollable = true,
+  });
 
   @override
   Widget build(BuildContext context) {
-    Size size = MediaQuery.of(context).size;
     return Container(
-      height: size.height * 0.5,
-      width: size.width * 0.38,
       padding: EdgeInsets.all(defaultPadding),
       decoration: BoxDecoration(
         color: cardBackgroundColor,
@@ -191,23 +203,34 @@ class PlayerTable extends StatelessWidget {
           ),
           SizedBox(
             width: double.infinity,
-            child: DataTable(
-              columnSpacing: defaultPadding,
-              columns: [
-                DataColumn(
-                  label: Text("Nama Pemain"),
-                ),
-                DataColumn(
-                  label: Text("Posisi"),
-                ),
-              ],
-              rows: List.generate(
-                demoRecentFiles.length,
-                (index) => recentFileDataRow(demoRecentFiles[index]),
-              ),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxHeight: maxHeight),
+              child: isScrollable
+                  ? SingleChildScrollView(
+                      child: buildDataTable(),
+                    )
+                  : buildDataTable(),
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  DataTable buildDataTable() {
+    return DataTable(
+      columnSpacing: defaultPadding,
+      columns: [
+        DataColumn(
+          label: Text("Nama Pemain"),
+        ),
+        DataColumn(
+          label: Text("Posisi"),
+        ),
+      ],
+      rows: List.generate(
+        demoRecentFiles.length,
+        (index) => recentFileDataRow(demoRecentFiles[index]),
       ),
     );
   }

@@ -1,11 +1,12 @@
 import 'package:coach_web/components/header.dart';
+import 'package:coach_web/config/responsive.dart';
 import 'package:coach_web/feature/add_schedule.dart';
 import 'package:coach_web/model/schedule_model.dart';
 import 'package:coach_web/service/api_service.dart';
-import 'package:flutter/material.dart';
-import 'package:coach_web/config/responsive.dart';
 import 'package:coach_web/utils/colors.dart';
 import 'package:coach_web/utils/constant.dart';
+import 'package:flutter/material.dart';
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:intl/intl.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -128,22 +129,33 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               ),
                             ),
                           )
-                        : GridView.builder(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            gridDelegate:
-                                SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount:
-                                  Responsive.isMobile(context) ? 1 : 4,
-                              childAspectRatio: 3 / 2,
-                              crossAxisSpacing: 20,
-                              mainAxisSpacing: 20,
-                            ),
-                            itemCount: schedules.length,
-                            itemBuilder: (context, index) {
-                              final schedule = schedules[index];
-                              return ScheduleCard(
-                                  schedule: schedule, size: size);
+                        : LayoutBuilder(
+                            builder: (context, constraints) {
+                              int crossAxisCount = 1;
+                              if (constraints.maxWidth > 1200) {
+                                crossAxisCount = 4;
+                              } else if (constraints.maxWidth > 800) {
+                                crossAxisCount = 3;
+                              } else if (constraints.maxWidth > 600) {
+                                crossAxisCount = 2;
+                              }
+                              return GridView.builder(
+                                shrinkWrap: true,
+                                physics: const NeverScrollableScrollPhysics(),
+                                gridDelegate:
+                                    SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: crossAxisCount,
+                                  childAspectRatio: 2 / 1, // Sesuaikan rasio
+                                  crossAxisSpacing: 20,
+                                  mainAxisSpacing: 20,
+                                ),
+                                itemCount: schedules.length,
+                                itemBuilder: (context, index) {
+                                  final schedule = schedules[index];
+                                  return ScheduleCard(
+                                      schedule: schedule, size: size);
+                                },
+                              );
                             },
                           ),
                 const SizedBox(height: 20),
@@ -171,8 +183,6 @@ class ScheduleCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: size.height * 0.25,
-      width: size.width * 0.18,
       decoration: const BoxDecoration(
         borderRadius: BorderRadius.all(
           Radius.circular(8.0),
@@ -180,51 +190,61 @@ class ScheduleCard extends StatelessWidget {
         color: cardBackgroundColor,
       ),
       child: Padding(
-        padding: const EdgeInsets.only(left: 20, right: 20, top: 20),
+        padding: const EdgeInsets.all(
+            12.0), // Sesuaikan padding untuk menghemat ruang
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
+            AutoSizeText(
               schedule.activityName,
               style: const TextStyle(
-                fontSize: 28,
+                fontSize: 18, // Sesuaikan ukuran font
                 fontWeight: FontWeight.w600,
               ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
-            SizedBox(
-              width: size.width,
-              child: const Divider(thickness: 1),
-            ),
-            const SizedBox(height: 10),
+            const Divider(thickness: 1),
+            const SizedBox(height: 8),
             Row(
               children: [
                 const Icon(
                   Icons.calendar_today,
                   color: AppColors.greyColor,
+                  size: 14, // Sesuaikan ukuran ikon
                 ),
-                const SizedBox(width: 10),
-                Text(
-                  formatDateTime(schedule.activityTime),
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w200,
+                const SizedBox(width: 8),
+                Expanded(
+                  child: AutoSizeText(
+                    formatDateTime(schedule.activityTime),
+                    style: const TextStyle(
+                      fontSize: 14, // Sesuaikan ukuran font
+                      fontWeight: FontWeight.w200,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 8),
             Row(
               children: [
                 const Icon(
                   Icons.place,
                   color: AppColors.chart01,
+                  size: 14, // Sesuaikan ukuran ikon
                 ),
-                const SizedBox(width: 10),
-                Text(
-                  schedule.activityLocation,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w200,
+                const SizedBox(width: 8),
+                Expanded(
+                  child: AutoSizeText(
+                    schedule.activityLocation,
+                    style: const TextStyle(
+                      fontSize: 14, // Sesuaikan ukuran font
+                      fontWeight: FontWeight.w200,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],

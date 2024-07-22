@@ -1,3 +1,4 @@
+import 'package:coach_web/components/header.dart';
 import 'package:coach_web/config/responsive.dart';
 import 'package:coach_web/feature/add_kriteria.dart';
 import 'package:coach_web/feature/edit_kriteria.dart';
@@ -69,7 +70,6 @@ class _KriteriaScreenState extends State<KriteriaScreen> {
 
   @override
   Widget build(BuildContext context) {
-    Size size = MediaQuery.of(context).size;
     return Scaffold(
       body: Padding(
         padding:
@@ -78,6 +78,8 @@ class _KriteriaScreenState extends State<KriteriaScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Header(),
+              const SizedBox(height: 20),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -105,7 +107,8 @@ class _KriteriaScreenState extends State<KriteriaScreen> {
               ),
               const SizedBox(height: 20),
               Container(
-                width: size.width * 0.4,
+                width:
+                    MediaQuery.of(context).size.width * 0.2, // Sesuaikan lebar
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
                 decoration: BoxDecoration(
@@ -136,29 +139,48 @@ class _KriteriaScreenState extends State<KriteriaScreen> {
               const SizedBox(height: 30),
               isLoading
                   ? const CircularProgressIndicator()
-                  : Wrap(
-                      spacing: 20,
-                      runSpacing: 20,
-                      children: filteredCriteria
-                          .map((aspek) => KriteriaCard(
-                                kriteria: aspek,
-                                onDelete: () {
-                                  _fetchCriteria(); // Refresh list after deleting
-                                },
-                              ))
-                          .toList(),
+                  : LayoutBuilder(
+                      builder: (context, constraints) {
+                        int crossAxisCount = 1;
+                        if (constraints.maxWidth > 1200) {
+                          crossAxisCount = 4;
+                        } else if (constraints.maxWidth > 800) {
+                          crossAxisCount = 3;
+                        } else if (constraints.maxWidth > 600) {
+                          crossAxisCount = 2;
+                        }
+                        return GridView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          gridDelegate:
+                              SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: crossAxisCount,
+                            childAspectRatio: 2 / 1.3,
+                            crossAxisSpacing: 20,
+                            mainAxisSpacing: 20,
+                          ),
+                          itemCount: filteredCriteria.length,
+                          itemBuilder: (context, index) {
+                            final kriteria = filteredCriteria[index];
+                            return KriteriaCard(
+                              kriteria: kriteria,
+                              onDelete: _fetchCriteria,
+                            );
+                          },
+                        );
+                      },
                     ),
               const SizedBox(height: 30),
               Center(
                 child: Container(
-                  height: size.height * 0.35,
-                  width: size.width * 0.2,
+                  width: MediaQuery.of(context).size.width *
+                      0.3, // Sesuaikan lebar
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(8.0),
                     color: cardBackgroundColor,
                   ),
                   child: Padding(
-                    padding: const EdgeInsets.only(left: 20, right: 20),
+                    padding: const EdgeInsets.all(20.0), // Sesuaikan padding
                     child: Column(
                       children: [
                         const SizedBox(height: 20),
@@ -255,39 +277,39 @@ class KriteriaCard extends StatelessWidget {
   Widget build(BuildContext context) {
     Size size = MediaQuery.of(context).size;
     return Container(
-      height: size.height * 0.25,
-      width: size.width * 0.18,
       decoration: const BoxDecoration(
-        borderRadius: BorderRadius.all(
-          Radius.circular(8.0),
-        ),
+        borderRadius: BorderRadius.all(Radius.circular(8.0)),
         color: cardBackgroundColor,
       ),
       child: Padding(
-        padding: const EdgeInsets.only(left: 20, right: 20, top: 20),
+        padding: const EdgeInsets.all(16.0),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      kriteria.criteria,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
+                Flexible(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        kriteria.criteria,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
-                    ),
-                    Text(
-                      kriteria.assessmentAspect,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w400,
+                      Text(
+                        kriteria.assessmentAspect,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w400,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
                 const Icon(
                   Icons.run_circle,
@@ -295,10 +317,7 @@ class KriteriaCard extends StatelessWidget {
                 )
               ],
             ),
-            SizedBox(
-              width: size.width,
-              child: const Divider(thickness: 1),
-            ),
+            const Divider(thickness: 1),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -339,11 +358,7 @@ class KriteriaCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 5),
-            const SizedBox(height: 5),
-            SizedBox(
-              width: size.width,
-              child: const Divider(thickness: 1),
-            ),
+            const Divider(thickness: 1),
             const SizedBox(height: 5),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -356,8 +371,9 @@ class KriteriaCard extends StatelessWidget {
                     height: size.height * 0.04,
                     width: size.height * 0.11,
                     decoration: BoxDecoration(
-                        color: AppColors.greenColor,
-                        borderRadius: BorderRadius.circular(16)),
+                      color: AppColors.greenColor,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
                     child: const Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -369,9 +385,10 @@ class KriteriaCard extends StatelessWidget {
                         Text(
                           'Edit',
                           style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                              color: AppColors.white),
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: AppColors.white,
+                          ),
                         ),
                       ],
                     ),
@@ -384,13 +401,14 @@ class KriteriaCard extends StatelessWidget {
                   child: const Text(
                     'Delete',
                     style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.chart01),
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.chart01,
+                    ),
                   ),
                 ),
               ],
-            )
+            ),
           ],
         ),
       ),
@@ -451,13 +469,16 @@ class KriteriaCard extends StatelessWidget {
                   width: MediaQuery.of(context).size.width * 0.08,
                   height: 56,
                   decoration: BoxDecoration(
-                      color: cardForegroundColor,
-                      borderRadius: BorderRadius.circular(8)),
+                    color: cardForegroundColor,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                   child: const Center(
                     child: Text(
                       'Batal',
-                      style:
-                          TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ),
                 ),
@@ -474,15 +495,17 @@ class KriteriaCard extends StatelessWidget {
                   width: MediaQuery.of(context).size.width * 0.08,
                   height: 56,
                   decoration: BoxDecoration(
-                      color: AppColors.primaryColor,
-                      borderRadius: BorderRadius.circular(8)),
+                    color: AppColors.primaryColor,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                   child: const Center(
                     child: Text(
                       'Hapus',
                       style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                 ),

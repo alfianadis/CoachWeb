@@ -1,9 +1,9 @@
+import 'package:coach_web/config/responsive.dart';
 import 'package:coach_web/config/user_provider.dart';
 import 'package:coach_web/controllers/menuAppController.dart';
+import 'package:coach_web/utils/constant.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:coach_web/utils/constant.dart';
-import 'package:coach_web/config/responsive.dart';
 
 class Header extends StatelessWidget {
   const Header({
@@ -15,14 +15,11 @@ class Header extends StatelessWidget {
     return Row(
       children: [
         if (!Responsive.isDesktop(context))
-          IconButton(
-            icon: Icon(Icons.menu),
-            onPressed: context.read<MenuAppController>().controlMenu,
-          ),
-        if (!Responsive.isMobile(context))
-          Text(
-            "Dashboard",
-            style: Theme.of(context).textTheme.titleLarge,
+          Consumer<MenuAppController>(
+            builder: (context, menuAppController, child) => IconButton(
+              icon: Icon(Icons.menu),
+              onPressed: menuAppController.controlMenu,
+            ),
           ),
         if (!Responsive.isMobile(context))
           Spacer(flex: Responsive.isDesktop(context) ? 2 : 1),
