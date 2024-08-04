@@ -8,6 +8,7 @@ class SideMenuData {
     MenuModel(icon: Icons.category, title: 'Aspek'),
     MenuModel(icon: Icons.assignment, title: 'Kriteria'),
     MenuModel(icon: Icons.bar_chart, title: 'Statistik'),
+    MenuModel(icon: Icons.emoji_emotions, title: 'Emotional'),
     MenuModel(icon: Icons.people, title: 'Line Up'),
     MenuModel(icon: Icons.score, title: 'Hasil Penilaian'),
     MenuModel(icon: Icons.logout, title: 'SignOut'),

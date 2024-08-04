@@ -3,6 +3,7 @@ import 'package:coach_web/config/responsive.dart';
 import 'package:coach_web/controllers/menuAppController.dart';
 import 'package:coach_web/feature/aspek_screen.dart';
 import 'package:coach_web/feature/dashboard.dart';
+import 'package:coach_web/feature/emotional_screen.dart';
 import 'package:coach_web/feature/kriteria_screen.dart';
 import 'package:coach_web/feature/lineup_screen.dart';
 import 'package:coach_web/feature/pemain_screen.dart';
@@ -69,6 +70,7 @@ class _MainScreenState extends State<MainScreen> {
                         AspekScreen(),
                         KriteriaScreen(),
                         StatistikScreen(),
+                        EmotionalScreen(),
                         LineupScreen(),
                         HasilPenilaianScreen(),
                       ],

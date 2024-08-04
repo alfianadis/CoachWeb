@@ -193,14 +193,18 @@ class _StatistikScreenState extends State<StatistikScreen> {
                           '${selectedPemainStatistik!.taktikal.passing}'),
                       buildStatRow('Through Pass',
                           '${selectedPemainStatistik!.taktikal.throughPass}'),
+                      buildStatRow('Wall Pass',
+                          '${selectedPemainStatistik!.taktikal.wallPass}'),
+                      buildStatRow('Positioning',
+                          '${selectedPemainStatistik!.taktikal.positioning}'),
                       buildStatRow(
                           'Save', '${selectedPemainStatistik!.keeper.save}'),
                       buildStatRow('Refleks',
-                          '${selectedPemainStatistik!.keeper.refleks}'),
+                          '${selectedPemainStatistik!.keeper.goalconceded}'),
                       buildStatRow(
-                          'Jump', '${selectedPemainStatistik!.keeper.jump}'),
+                          'Jump', '${selectedPemainStatistik!.keeper.split}'),
                       buildStatRow('Throwing',
-                          '${selectedPemainStatistik!.keeper.throwing}'),
+                          '${selectedPemainStatistik!.keeper.buildup}'),
                     ],
                   ),
                 );

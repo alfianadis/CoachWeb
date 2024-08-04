@@ -15,15 +15,17 @@ class AssessmentModel {
     this.finalScore = 0.0, // Inisialisasi properti ini
   });
 
-  factory AssessmentModel.fromJson(Map<String, dynamic> json) =>
-      AssessmentModel(
-        id: json["_id"],
-        posisi: json["posisi"],
-        playerName: json["player_name"],
-        aspectName: json["aspect_name"],
-        aspect:
-            List<Aspect>.from(json["aspect"].map((x) => Aspect.fromJson(x))),
-      );
+  factory AssessmentModel.fromJson(Map<String, dynamic> json) {
+    return AssessmentModel(
+      id: json["_id"] ?? '',
+      posisi: json["posisi"] ?? '',
+      playerName: json["player_name"] ?? '',
+      aspectName: json["aspect_name"] ?? '',
+      aspect: json["aspect"] != null
+          ? List<Aspect>.from(json["aspect"].map((x) => Aspect.fromJson(x)))
+          : [],
+    );
+  }
 
   Map<String, dynamic> toJson() => {
         "_id": id,
@@ -43,10 +45,19 @@ class Aspect {
     required this.criteria,
   });
 
-  factory Aspect.fromJson(Map<String, dynamic> json) => Aspect(
-        target: Map<String, String>.from(json["target"]),
-        criteria: Criteria.fromJson(json["criteria"]),
-      );
+  factory Aspect.fromJson(Map<String, dynamic> json) {
+    var aspect = Aspect(
+      target: json["target"] != null
+          ? Map<String, String>.from(json["target"])
+          : {},
+      criteria: json["criteria"] != null
+          ? Criteria.fromJson(json["criteria"])
+          : Criteria(coreFactor: {}, secondaryFactor: {}),
+    );
+    // Debugging tambahan
+    print('Aspect Targets: ${aspect.target}');
+    return aspect;
+  }
 
   Map<String, dynamic> toJson() => {
         "target": target,
@@ -54,8 +65,8 @@ class Aspect {
       };
 
   double calculateSelisih(String key) {
-    int criteriaValue = int.parse(criteria.values[key]!);
-    int targetValue = int.parse(target[key]!);
+    int criteriaValue = int.parse(criteria.values[key] ?? '0');
+    int targetValue = int.parse(target[key] ?? '0');
     return (criteriaValue - targetValue).toDouble();
   }
 
@@ -114,10 +125,16 @@ class Criteria {
     required this.secondaryFactor,
   });
 
-  factory Criteria.fromJson(Map<String, dynamic> json) => Criteria(
-        coreFactor: Map<String, String>.from(json["core_factor"]),
-        secondaryFactor: Map<String, String>.from(json["secondary_factor"]),
-      );
+  factory Criteria.fromJson(Map<String, dynamic> json) {
+    return Criteria(
+      coreFactor: json["core_factor"] != null
+          ? Map<String, String>.from(json["core_factor"])
+          : {},
+      secondaryFactor: json["secondary_factor"] != null
+          ? Map<String, String>.from(json["secondary_factor"])
+          : {},
+    );
+  }
 
   Map<String, dynamic> toJson() => {
         "core_factor": coreFactor,

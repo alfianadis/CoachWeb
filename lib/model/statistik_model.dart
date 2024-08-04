@@ -119,29 +119,29 @@ class Defence {
 
 class Keeper {
   int save;
-  int refleks;
-  int jump;
-  int throwing;
+  int goalconceded;
+  int split;
+  int buildup;
 
   Keeper({
     required this.save,
-    required this.refleks,
-    required this.jump,
-    required this.throwing,
+    required this.goalconceded,
+    required this.split,
+    required this.buildup,
   });
 
   factory Keeper.fromJson(Map<String, dynamic> json) => Keeper(
         save: json["Save"],
-        refleks: json["Refleks"],
-        jump: json["Jump"],
-        throwing: json["Throwing"],
+        goalconceded: json["Goal_Conceded"],
+        split: json["Split"],
+        buildup: json["Build_Up"],
       );
 
   Map<String, dynamic> toJson() => {
         "Save": save,
-        "Refleks": refleks,
-        "Jump": jump,
-        "Throwing": throwing,
+        "Goal_Conceded": goalconceded,
+        "Split": split,
+        "Build_Up": buildup,
       };
 }
 
@@ -149,22 +149,30 @@ class Taktikal {
   int vision;
   int passing;
   int throughPass;
+  int positioning;
+  int wallPass;
 
   Taktikal({
     required this.vision,
     required this.passing,
     required this.throughPass,
+    required this.positioning,
+    required this.wallPass,
   });
 
   factory Taktikal.fromJson(Map<String, dynamic> json) => Taktikal(
         vision: json["Vision"],
         passing: json["Passing"],
         throughPass: json["Through_Pass"],
+        positioning: json["Positioning"],
+        wallPass: json["Wall_Pass"],
       );
 
   Map<String, dynamic> toJson() => {
         "Vision": vision,
         "Passing": passing,
         "Through_Pass": throughPass,
+        "Positioning": positioning,
+        "Wall_Pass": wallPass,
       };
 }

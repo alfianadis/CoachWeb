@@ -98,8 +98,8 @@ class _SideMenuWidgetState extends State<SideMenuWidget> {
       ),
       child: InkWell(
         onTap: () {
-          if (index == 7) {
-            // Index 7 is for SignOut
+          if (index == 8) {
+            // Index 8 is for SignOut
             signOut(context);
           } else {
             setState(() {

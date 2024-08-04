@@ -74,11 +74,11 @@ class _LineupScreenState extends State<LineupScreen> {
             name: player.playerName,
             posisi: player.posisi,
           )),
-      ..._getBestPlayersByPosition('Flank', 2, 2).map((player) => RecentFile(
+      ..._getBestPlayersByPosition('Flank', 2, 1).map((player) => RecentFile(
             name: player.playerName,
             posisi: player.posisi,
           )),
-      ..._getBestPlayersByPosition('Pivot', 2, 2).map((player) => RecentFile(
+      ..._getBestPlayersByPosition('Pivot', 2, 1).map((player) => RecentFile(
             name: player.playerName,
             posisi: player.posisi,
           )),

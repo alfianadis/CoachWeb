@@ -24,6 +24,11 @@ class _HasilPenilaianScreenState extends State<HasilPenilaianScreen> {
   Future<void> _fetchPlayers() async {
     try {
       List<AssessmentModel> data = await apiService.fetchPlayerData();
+      // Debugging tambahan untuk mencetak data JSON
+      for (var player in data) {
+        print('Player JSON: ${player.toJson()}');
+      }
+      _debugPrintTargets(data); // Tambahkan ini untuk debugging
       setState(() {
         _assessments = data;
       });
@@ -32,29 +37,52 @@ class _HasilPenilaianScreenState extends State<HasilPenilaianScreen> {
     }
   }
 
+  void _debugPrintTargets(List<AssessmentModel> assessments) {
+    for (var assessment in assessments) {
+      print('Player: ${assessment.playerName}');
+      for (var aspect in assessment.aspect) {
+        print('Targets: ${aspect.target}');
+        aspect.target.forEach((key, value) {
+          print('Target $key: $value');
+        });
+        aspect.criteria.coreFactor.forEach((key, value) {
+          print('Core Factor $key: $value');
+        });
+        aspect.criteria.secondaryFactor.forEach((key, value) {
+          print('Secondary Factor $key: $value');
+        });
+      }
+    }
+  }
+
   double _calculateTotalScore(AssessmentModel player) {
-    var criteria = player.aspect.first.criteria;
-    var coreFactors = criteria.coreFactor.keys.toList();
-    var secondaryFactors = criteria.secondaryFactor.keys.toList();
+    try {
+      var criteria = player.aspect.first.criteria;
+      var coreFactors = criteria.coreFactor.keys.toList();
+      var secondaryFactors = criteria.secondaryFactor.keys.toList();
 
-    double coreScore = 0;
-    double secondaryScore = 0;
+      double coreScore = 0;
+      double secondaryScore = 0;
 
-    for (var factor in coreFactors) {
-      double selisih = player.aspect.first.calculateSelisih(factor);
-      coreScore += player.aspect.first.getBobotNilai(selisih);
+      for (var factor in coreFactors) {
+        double selisih = player.aspect.first.calculateSelisih(factor);
+        coreScore += player.aspect.first.getBobotNilai(selisih);
+      }
+      double ncf = coreScore / coreFactors.length;
+
+      for (var factor in secondaryFactors) {
+        double selisih = player.aspect.first.calculateSelisih(factor);
+        secondaryScore += player.aspect.first.getBobotNilai(selisih);
+      }
+      double nsf = secondaryScore / secondaryFactors.length;
+
+      double totalScore = (ncf * 0.6) + (nsf * 0.4);
+
+      return totalScore;
+    } catch (e) {
+      print('Error calculating total score: $e');
+      return 0.0;
     }
-    double ncf = coreScore / coreFactors.length;
-
-    for (var factor in secondaryFactors) {
-      double selisih = player.aspect.first.calculateSelisih(factor);
-      secondaryScore += player.aspect.first.getBobotNilai(selisih);
-    }
-    double nsf = secondaryScore / secondaryFactors.length;
-
-    double totalScore = (ncf * 0.6) + (nsf * 0.4);
-
-    return totalScore;
   }
 
   void _sortPlayersByTotalScore() {
@@ -62,6 +90,18 @@ class _HasilPenilaianScreenState extends State<HasilPenilaianScreen> {
       _assessments.sort(
           (a, b) => _calculateTotalScore(b).compareTo(_calculateTotalScore(a)));
     });
+  }
+
+  List<String> _getAllFactors(List<AssessmentModel> assessments) {
+    Set<String> factors = {};
+    for (var assessment in assessments) {
+      for (var aspect in assessment.aspect) {
+        factors.addAll(aspect.target.keys);
+        factors.addAll(aspect.criteria.coreFactor.keys);
+        factors.addAll(aspect.criteria.secondaryFactor.keys);
+      }
+    }
+    return factors.toList();
   }
 
   @override
@@ -152,18 +192,21 @@ class _HasilPenilaianScreenState extends State<HasilPenilaianScreen> {
   }
 
   Widget _buildResponsiveContainer(Widget child, Size size) {
-    return Container(
-      decoration: const BoxDecoration(
-        borderRadius: BorderRadius.all(
-          Radius.circular(8.0),
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Container(
+        decoration: const BoxDecoration(
+          borderRadius: BorderRadius.all(
+            Radius.circular(8.0),
+          ),
+          color: cardBackgroundColor,
         ),
-        color: cardBackgroundColor,
-      ),
-      padding: EdgeInsets.all(15),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: IntrinsicWidth(
-          child: child,
+        padding: EdgeInsets.all(15),
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: IntrinsicWidth(
+            child: child,
+          ),
         ),
       ),
     );
@@ -179,9 +222,12 @@ class _HasilPenilaianScreenState extends State<HasilPenilaianScreen> {
           child: Text('Tidak ada data untuk posisi $_selectedPosition'));
     }
 
-    var criteria = filteredAssessments.first.aspect.first.criteria;
-    var coreFactors = criteria.coreFactor.keys.toList();
-    var secondaryFactors = criteria.secondaryFactor.keys.toList();
+    List<String> allFactors = _getAllFactors(filteredAssessments);
+
+    List<DataColumn> columns = [
+      DataColumn(label: Text('Nama Pemain')),
+      ...allFactors.map((factor) => DataColumn(label: Text(factor))),
+    ];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -191,32 +237,24 @@ class _HasilPenilaianScreenState extends State<HasilPenilaianScreen> {
           style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
         ),
         SizedBox(height: 10),
-        Container(
-          margin: EdgeInsets.symmetric(horizontal: 8.0),
-          child: DataTable(
-            columns: [
-              DataColumn(label: Text('Nama Pemain')),
-              DataColumn(label: Text(coreFactors[0])),
-              DataColumn(label: Text(coreFactors[1])),
-              DataColumn(label: Text(secondaryFactors[0])),
-              DataColumn(label: Text(secondaryFactors[1])),
-            ],
-            rows: filteredAssessments.map((assessment) {
-              var aspect = assessment.aspect.first;
-              return DataRow(cells: [
-                DataCell(Text(assessment.playerName)),
-                DataCell(
-                    Text(aspect.criteria.coreFactor[coreFactors[0]] ?? '')),
-                DataCell(
-                    Text(aspect.criteria.coreFactor[coreFactors[1]] ?? '')),
-                DataCell(Text(
-                    aspect.criteria.secondaryFactor[secondaryFactors[0]] ??
-                        '')),
-                DataCell(Text(
-                    aspect.criteria.secondaryFactor[secondaryFactors[1]] ??
-                        '')),
-              ]);
-            }).toList(),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: IntrinsicWidth(
+            child: DataTable(
+              columns: columns,
+              rows: filteredAssessments.map((assessment) {
+                var aspect = assessment.aspect.first;
+                return DataRow(cells: [
+                  DataCell(Text(assessment.playerName)),
+                  ...allFactors.map((factor) {
+                    var value = aspect.criteria.coreFactor[factor] ??
+                        aspect.criteria.secondaryFactor[factor] ??
+                        '0';
+                    return DataCell(Text(value));
+                  }).toList(),
+                ]);
+              }).toList(),
+            ),
           ),
         ),
       ],
@@ -233,44 +271,48 @@ class _HasilPenilaianScreenState extends State<HasilPenilaianScreen> {
           child: Text('Tidak ada data untuk posisi $_selectedPosition'));
     }
 
-    var target = filteredAssessments.first.aspect.first.target;
-    var coreFactors = filteredAssessments
-        .first.aspect.first.criteria.coreFactor.keys
-        .toList();
-    var secondaryFactors = filteredAssessments
-        .first.aspect.first.criteria.secondaryFactor.keys
-        .toList();
+    // Dapatkan semua faktor dari target dan kriteria
+    List<String> allFactors = _getAllFactors(filteredAssessments);
 
-    return Padding(
-      padding: const EdgeInsets.only(left: 30),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Nilai Target',
-            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
-          ),
-          SizedBox(width: 90),
-          Text(
-            target[coreFactors[0]] ?? '',
-            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
-          ),
-          SizedBox(width: 85),
-          Text(
-            target[coreFactors[1]] ?? '',
-            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
-          ),
-          SizedBox(width: 140),
-          Text(
-            target[secondaryFactors[0]] ?? '',
-            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
-          ),
-          SizedBox(width: 140),
-          Text(
-            target[secondaryFactors[1]] ?? '',
-            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
-          ),
-        ],
+    // Cetak semua faktor untuk debugging
+    print('All Factors: $allFactors');
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Padding(
+        padding: const EdgeInsets.only(left: 30),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Nilai Target',
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+            ),
+            SizedBox(width: 90),
+            ...allFactors.map((factor) {
+              String? value;
+              for (var assessment in filteredAssessments) {
+                if (assessment.aspect.first.target.containsKey(factor)) {
+                  value = assessment.aspect.first.target[factor];
+                  break;
+                }
+              }
+              if (value == null) {
+                print('Key not found in target: $factor');
+                value = '0';
+              } else {
+                print('Factor: $factor, Target value: $value');
+              }
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                child: Text(
+                  value,
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+                ),
+              );
+            }).toList(),
+          ],
+        ),
       ),
     );
   }
@@ -285,9 +327,12 @@ class _HasilPenilaianScreenState extends State<HasilPenilaianScreen> {
           child: Text('Tidak ada data untuk posisi $_selectedPosition'));
     }
 
-    var criteria = filteredAssessments.first.aspect.first.criteria;
-    var coreFactors = criteria.coreFactor.keys.toList();
-    var secondaryFactors = criteria.secondaryFactor.keys.toList();
+    List<String> allFactors = _getAllFactors(filteredAssessments);
+
+    List<DataColumn> columns = [
+      DataColumn(label: Text('Nama Pemain')),
+      ...allFactors.map((factor) => DataColumn(label: Text(factor))),
+    ];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -301,41 +346,17 @@ class _HasilPenilaianScreenState extends State<HasilPenilaianScreen> {
           scrollDirection: Axis.horizontal,
           child: IntrinsicWidth(
             child: DataTable(
-              columns: [
-                DataColumn(label: Text('Nama Pemain')),
-                DataColumn(label: Text(coreFactors[0])),
-                DataColumn(label: Text(coreFactors[1])),
-                DataColumn(label: Text(secondaryFactors[0])),
-                DataColumn(label: Text(secondaryFactors[1])),
-              ],
+              columns: columns,
               rows: filteredAssessments.map((assessment) {
                 var aspect = assessment.aspect.first;
                 return DataRow(cells: [
                   DataCell(Text(assessment.playerName)),
-                  DataCell(Text(
-                      (int.parse(aspect.target[coreFactors[0]] ?? '0') -
-                              int.parse(
-                                  aspect.criteria.coreFactor[coreFactors[0]] ??
-                                      '0'))
-                          .toString())),
-                  DataCell(Text(
-                      (int.parse(aspect.target[coreFactors[1]] ?? '0') -
-                              int.parse(
-                                  aspect.criteria.coreFactor[coreFactors[1]] ??
-                                      '0'))
-                          .toString())),
-                  DataCell(Text(
-                      (int.parse(aspect.target[secondaryFactors[0]] ?? '0') -
-                              int.parse(aspect.criteria
-                                      .secondaryFactor[secondaryFactors[0]] ??
+                  ...allFactors.map((factor) => DataCell(Text(
+                      (int.parse(aspect.target[factor] ?? '0') -
+                              int.parse(aspect.criteria.coreFactor[factor] ??
+                                  aspect.criteria.secondaryFactor[factor] ??
                                   '0'))
-                          .toString())),
-                  DataCell(Text(
-                      (int.parse(aspect.target[secondaryFactors[1]] ?? '0') -
-                              int.parse(aspect.criteria
-                                      .secondaryFactor[secondaryFactors[1]] ??
-                                  '0'))
-                          .toString())),
+                          .toString()))),
                 ]);
               }).toList(),
             ),
@@ -355,9 +376,12 @@ class _HasilPenilaianScreenState extends State<HasilPenilaianScreen> {
           child: Text('Tidak ada data untuk posisi $_selectedPosition'));
     }
 
-    var criteria = filteredAssessments.first.aspect.first.criteria;
-    var coreFactors = criteria.coreFactor.keys.toList();
-    var secondaryFactors = criteria.secondaryFactor.keys.toList();
+    List<String> allFactors = _getAllFactors(filteredAssessments);
+
+    List<DataColumn> columns = [
+      DataColumn(label: Text('Nama Pemain')),
+      ...allFactors.map((factor) => DataColumn(label: Text(factor))),
+    ];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -371,49 +395,18 @@ class _HasilPenilaianScreenState extends State<HasilPenilaianScreen> {
           scrollDirection: Axis.horizontal,
           child: IntrinsicWidth(
             child: DataTable(
-              columns: [
-                DataColumn(label: Text('Nama Pemain')),
-                DataColumn(label: Text(coreFactors[0])),
-                DataColumn(label: Text(coreFactors[1])),
-                DataColumn(label: Text(secondaryFactors[0])),
-                DataColumn(label: Text(secondaryFactors[1])),
-              ],
+              columns: columns,
               rows: filteredAssessments.map((assessment) {
                 var aspect = assessment.aspect.first;
                 return DataRow(cells: [
                   DataCell(Text(assessment.playerName)),
-                  DataCell(Text(aspect
-                      .getBobotNilai(
-                          (int.parse(aspect.target[coreFactors[0]] ?? '0') -
-                                  int.parse(aspect.criteria
-                                          .coreFactor[coreFactors[0]] ??
-                                      '0'))
-                              .toDouble())
-                      .toString())),
-                  DataCell(Text(aspect
-                      .getBobotNilai(
-                          (int.parse(aspect.target[coreFactors[1]] ?? '0') -
-                                  int.parse(aspect.criteria
-                                          .coreFactor[coreFactors[1]] ??
-                                      '0'))
-                              .toDouble())
-                      .toString())),
-                  DataCell(Text(aspect
-                      .getBobotNilai((int.parse(
-                                  aspect.target[secondaryFactors[0]] ?? '0') -
-                              int.parse(aspect.criteria
-                                      .secondaryFactor[secondaryFactors[0]] ??
+                  ...allFactors.map((factor) => DataCell(Text(aspect
+                      .getBobotNilai((int.parse(aspect.target[factor] ?? '0') -
+                              int.parse(aspect.criteria.coreFactor[factor] ??
+                                  aspect.criteria.secondaryFactor[factor] ??
                                   '0'))
                           .toDouble())
-                      .toString())),
-                  DataCell(Text(aspect
-                      .getBobotNilai((int.parse(
-                                  aspect.target[secondaryFactors[1]] ?? '0') -
-                              int.parse(aspect.criteria
-                                      .secondaryFactor[secondaryFactors[1]] ??
-                                  '0'))
-                          .toDouble())
-                      .toString())),
+                      .toString()))),
                 ]);
               }).toList(),
             ),
@@ -422,6 +415,121 @@ class _HasilPenilaianScreenState extends State<HasilPenilaianScreen> {
       ],
     );
   }
+
+  // Widget _buildDataAkhirTable() {
+  //   List<AssessmentModel> filteredAssessments = _assessments
+  //       .where((assessment) => assessment.posisi == _selectedPosition)
+  //       .toList();
+
+  //   if (filteredAssessments.isEmpty) {
+  //     return Center(
+  //         child: Text('Tidak ada data untuk posisi $_selectedPosition'));
+  //   }
+
+  //   List<String> allFactors = _getAllFactors(filteredAssessments);
+
+  //   List<DataColumn> columns = [
+  //     DataColumn(label: Text('Nama Pemain')),
+  //     ...allFactors.map((factor) => DataColumn(label: Text(factor))),
+  //     DataColumn(label: Text('NCF')),
+  //     DataColumn(label: Text('NSF')),
+  //     DataColumn(label: Text('Total')),
+  //   ];
+
+  //   return SingleChildScrollView(
+  //     scrollDirection: Axis.horizontal,
+  //     child: Column(
+  //       crossAxisAlignment: CrossAxisAlignment.start,
+  //       children: <Widget>[
+  //         Text(
+  //           'Nilai Akhir',
+  //           style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+  //         ),
+  //         SizedBox(height: 10),
+  //         SingleChildScrollView(
+  //           scrollDirection: Axis.horizontal,
+  //           child: DataTable(
+  //             columns: columns,
+  //             rows: filteredAssessments.map((assessment) {
+  //               var aspect = assessment.aspect.first;
+  //               double coreScore = 0;
+  //               double secondaryScore = 0;
+
+  //               for (var factor in allFactors) {
+  //                 double selisih = aspect.calculateSelisih(factor);
+  //                 if (aspect.criteria.coreFactor.containsKey(factor)) {
+  //                   coreScore += aspect.getBobotNilai(selisih);
+  //                 } else if (aspect.criteria.secondaryFactor
+  //                     .containsKey(factor)) {
+  //                   secondaryScore += aspect.getBobotNilai(selisih);
+  //                 }
+  //               }
+  //               double ncf = coreScore /
+  //                   (aspect.criteria.coreFactor.length > 0
+  //                       ? aspect.criteria.coreFactor.length
+  //                       : 1);
+  //               double nsf = secondaryScore /
+  //                   (aspect.criteria.secondaryFactor.length > 0
+  //                       ? aspect.criteria.secondaryFactor.length
+  //                       : 1);
+
+  //               double totalScore = (ncf * 0.6) + (nsf * 0.4);
+
+  //               return DataRow(cells: [
+  //                 DataCell(
+  //                   Container(
+  //                     width: 100, // Set width according to your needs
+  //                     child: Text(assessment.playerName, softWrap: true),
+  //                   ),
+  //                 ),
+  //                 ...allFactors.map((factor) {
+  //                   return DataCell(
+  //                     Container(
+  //                       width: 50, // Set width according to your needs
+  //                       child: Text(
+  //                         aspect
+  //                             .getBobotNilai(
+  //                               (int.parse(aspect.target[factor] ?? '0') -
+  //                                       int.parse(aspect
+  //                                               .criteria.coreFactor[factor] ??
+  //                                           aspect.criteria
+  //                                               .secondaryFactor[factor] ??
+  //                                           '0'))
+  //                                   .toDouble(),
+  //                             )
+  //                             .toString(),
+  //                         softWrap: true,
+  //                       ),
+  //                     ),
+  //                   );
+  //                 }).toList(),
+  //                 DataCell(
+  //                   Container(
+  //                     width: 50, // Set width according to your needs
+  //                     child: Text(ncf.toStringAsFixed(2), softWrap: true),
+  //                   ),
+  //                 ),
+  //                 DataCell(
+  //                   Container(
+  //                     width: 50, // Set width according to your needs
+  //                     child: Text(nsf.toStringAsFixed(2), softWrap: true),
+  //                   ),
+  //                 ),
+  //                 DataCell(
+  //                   Container(
+  //                     width: 50, // Set width according to your needs
+  //                     child:
+  //                         Text(totalScore.toStringAsFixed(2), softWrap: true),
+  //                   ),
+  //                 ),
+  //               ]);
+  //             }).toList(),
+  //           ),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 
   Widget _buildDataAkhirTable() {
     List<AssessmentModel> filteredAssessments = _assessments
@@ -433,94 +541,79 @@ class _HasilPenilaianScreenState extends State<HasilPenilaianScreen> {
           child: Text('Tidak ada data untuk posisi $_selectedPosition'));
     }
 
-    var criteria = filteredAssessments.first.aspect.first.criteria;
-    var coreFactors = criteria.coreFactor.keys.toList();
-    var secondaryFactors = criteria.secondaryFactor.keys.toList();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        Text(
-          'Nilai Akhir',
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-        ),
-        SizedBox(height: 10),
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: IntrinsicWidth(
-            child: DataTable(
-              columns: [
-                DataColumn(label: Text('Nama Pemain')),
-                DataColumn(label: Text(coreFactors[0])),
-                DataColumn(label: Text(coreFactors[1])),
-                DataColumn(label: Text(secondaryFactors[0])),
-                DataColumn(label: Text(secondaryFactors[1])),
-                DataColumn(label: Text('NCF')),
-                DataColumn(label: Text('NSF')),
-                DataColumn(label: Text('Total')),
-              ],
-              rows: filteredAssessments.map((assessment) {
-                var aspect = assessment.aspect.first;
-                double coreScore = 0;
-                double secondaryScore = 0;
-
-                for (var factor in coreFactors) {
-                  double selisih = aspect.calculateSelisih(factor);
-                  coreScore += aspect.getBobotNilai(selisih);
-                }
-                double ncf = coreScore / coreFactors.length;
-
-                for (var factor in secondaryFactors) {
-                  double selisih = aspect.calculateSelisih(factor);
-                  secondaryScore += aspect.getBobotNilai(selisih);
-                }
-                double nsf = secondaryScore / secondaryFactors.length;
-
-                double totalScore = (ncf * 0.6) + (nsf * 0.4);
-
-                return DataRow(cells: [
-                  DataCell(Text(assessment.playerName)),
-                  DataCell(Text(aspect
-                      .getBobotNilai(
-                          (int.parse(aspect.target[coreFactors[0]] ?? '0') -
-                                  int.parse(aspect.criteria
-                                          .coreFactor[coreFactors[0]] ??
-                                      '0'))
-                              .toDouble())
-                      .toString())),
-                  DataCell(Text(aspect
-                      .getBobotNilai(
-                          (int.parse(aspect.target[coreFactors[1]] ?? '0') -
-                                  int.parse(aspect.criteria
-                                          .coreFactor[coreFactors[1]] ??
-                                      '0'))
-                              .toDouble())
-                      .toString())),
-                  DataCell(Text(aspect
-                      .getBobotNilai((int.parse(
-                                  aspect.target[secondaryFactors[0]] ?? '0') -
-                              int.parse(aspect.criteria
-                                      .secondaryFactor[secondaryFactors[0]] ??
-                                  '0'))
-                          .toDouble())
-                      .toString())),
-                  DataCell(Text(aspect
-                      .getBobotNilai((int.parse(
-                                  aspect.target[secondaryFactors[1]] ?? '0') -
-                              int.parse(aspect.criteria
-                                      .secondaryFactor[secondaryFactors[1]] ??
-                                  '0'))
-                          .toDouble())
-                      .toString())),
-                  DataCell(Text(ncf.toStringAsFixed(2))),
-                  DataCell(Text(nsf.toStringAsFixed(2))),
-                  DataCell(Text(totalScore.toStringAsFixed(2))),
-                ]);
-              }).toList(),
-            ),
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Text(
+            'Nilai Akhir',
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
-        ),
-      ],
+          SizedBox(height: 10),
+          DataTable(
+            columns: [
+              DataColumn(label: Text('Nama Pemain')),
+              DataColumn(label: Text('NCF')),
+              DataColumn(label: Text('NSF')),
+              DataColumn(label: Text('Total')),
+            ],
+            rows: filteredAssessments.map((assessment) {
+              var aspect = assessment.aspect.first;
+              double coreScore = 0;
+              double secondaryScore = 0;
+
+              aspect.criteria.coreFactor.forEach((factor, value) {
+                double selisih = aspect.calculateSelisih(factor);
+                coreScore += aspect.getBobotNilai(selisih);
+              });
+
+              aspect.criteria.secondaryFactor.forEach((factor, value) {
+                double selisih = aspect.calculateSelisih(factor);
+                secondaryScore += aspect.getBobotNilai(selisih);
+              });
+
+              double ncf = coreScore /
+                  (aspect.criteria.coreFactor.length > 0
+                      ? aspect.criteria.coreFactor.length
+                      : 1);
+              double nsf = secondaryScore /
+                  (aspect.criteria.secondaryFactor.length > 0
+                      ? aspect.criteria.secondaryFactor.length
+                      : 1);
+
+              double totalScore = (ncf * 0.6) + (nsf * 0.4);
+
+              return DataRow(cells: [
+                DataCell(
+                  Container(
+                    width: 150, // Menentukan lebar sesuai kebutuhan
+                    child: Text(assessment.playerName, softWrap: true),
+                  ),
+                ),
+                DataCell(
+                  Container(
+                    width: 50, // Menentukan lebar sesuai kebutuhan
+                    child: Text(ncf.toStringAsFixed(2), softWrap: true),
+                  ),
+                ),
+                DataCell(
+                  Container(
+                    width: 50, // Menentukan lebar sesuai kebutuhan
+                    child: Text(nsf.toStringAsFixed(2), softWrap: true),
+                  ),
+                ),
+                DataCell(
+                  Container(
+                    width: 50, // Menentukan lebar sesuai kebutuhan
+                    child: Text(totalScore.toStringAsFixed(2), softWrap: true),
+                  ),
+                ),
+              ]);
+            }).toList(),
+          ),
+        ],
+      ),
     );
   }
 }
